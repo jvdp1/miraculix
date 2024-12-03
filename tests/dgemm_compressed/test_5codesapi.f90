@@ -30,8 +30,8 @@ program test_5codesAPI
  !$ use omp_lib
  implicit none
 
- integer, parameter :: ncol =  10
- integer, parameter :: nrepet = 3
+ integer, parameter :: ncol =  50
+ integer, parameter :: nrepet = 6
  integer, parameter :: nmin = merge(1, 0, nrepet > 1)
  logical, parameter :: ltest = .false.
  logical, parameter :: lcenter = .true.
@@ -71,9 +71,6 @@ program test_5codesAPI
  type(c_ptr) :: c_plinkbed
  type(c_ptr) :: c_plinkbed_transposed
  type(c_ptr) :: c_compressed
- 
- character(len=4) :: trans
- integer :: f_usegpu
 
  call get_command_argument(1,value=mat%genfile,status=io)
  call get_command_argument(2,value=freqfile,status=io)

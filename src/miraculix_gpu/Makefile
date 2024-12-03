@@ -1,5 +1,5 @@
 CUDA=true
-COMPILER=gcc
+COMPILER=intel
 
 #Martin's includes:
 MK_SRC=./

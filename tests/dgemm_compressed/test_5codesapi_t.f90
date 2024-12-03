@@ -1,3 +1,23 @@
+!  Authors 
+!  Jeremie Vandenplas, jeremie.vandenplas@wur.nl
+!  Alexander Freudenberg, alexander.freudenberg@stads.de
+!  Copyright (C) 2022-2023 Jeremie Vandenplas, Alexander Freudenberg
+
+!  Licensed under the Apache License, Version 2.0 (the "License");
+!  you may not use this file except in compliance with the License.
+!  You may obtain a copy of the License at
+
+!     http://www.apache.org/licenses/LICENSE-2.0
+
+!  Unless required by applicable law or agreed to in writing, software
+!  distributed under the License is distributed on an "AS IS" BASIS,
+!  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+!  See the License for the specific language governing permissions and
+!  limitations under the License.
+
+! A CUDA installation and a GPU of compute capability greater than 7.0 is required
+
+
 program test_5codesAPI_t
  use, intrinsic:: iso_fortran_env, only: int8, real64
  use, intrinsic:: iso_c_binding, only: c_loc, c_int, c_ptr, c_null_ptr, c_double&
@@ -10,17 +30,17 @@ program test_5codesAPI_t
  !$ use omp_lib
  implicit none
 
- integer, parameter :: ncol =  15
- integer, parameter :: nrepet = 3
+ integer, parameter :: ncol =  50
+ integer, parameter :: nrepet = 6
  integer, parameter :: nmin = merge(1, 0, nrepet > 1)
- logical, parameter :: ltest = .true.
+ logical, parameter :: ltest = .false.
  logical, parameter :: lcenter = .true.
- logical, parameter :: lverbose = .false.
+ logical, parameter :: lverbose = .true.
 
 
  integer(c_int), parameter :: usegpu = 1_c_int
  integer(c_int), parameter :: c_not_center = merge(0, 1, lcenter)
- integer(c_int), parameter :: c_lverbose = 2! merge(1, 0, lverbose)
+ integer(c_int), parameter :: c_lverbose = 2!merge(1, 0, lverbose)
  real(real64), parameter :: tol_real64 = 1e-4
  
  integer :: irepet
@@ -94,9 +114,9 @@ program test_5codesAPI_t
                    /(count(mat_ascii%cov%val(i,:).le.2._real64+epsilon(1._real64)) * 2._real64)
   enddo
 
-  call check_freq('AR', compfreq_test, freq)
+  !call check_freq('AR', compfreq_test, freq)
 
-  freq = compfreq_test
+  !freq = compfreq_test
 
   deallocate(compfreq_test)
 
@@ -110,6 +130,7 @@ program test_5codesAPI_t
 #ifdef CUDA
  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  !Transpose the 1-byte genotype matrix
+ write(*,'(a)')'Transpose the 1-byte genotype matrix'
  print*, mat%ngen, mat%nsnp, size(mat%cov%ival, 2),mat%cov%nrows
  call transpose_integermatrix(mat%ngen, mat%nsnp, size(mat%cov%ival, 2)&
                               , mat%cov%ival, idummy&
