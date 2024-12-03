@@ -18,7 +18,6 @@
  limitations under the License.
 */
 
-//#include "Basic_miraculix.h"
 #ifndef basic_miraculix_H
 
 #define basic_miraculix_H 1
@@ -32,45 +31,8 @@
 #include "5codesgpu.h"
 #include "GPUapi.h"
 
-
-#if !defined CUDA
-void plink2gpu(char VARIABLE_IS_NOT_USED  *plink, // including three-byte
-	       // header, size in bytes: ceiling(indiv/4) * snps + 3
-    char VARIABLE_IS_NOT_USED *plink_transposed, // @JV: If I remember correctly, you need to
-                            // transpose the matrix anyway? so it should be
-                            // easier to have this as an argument, and not
-                            // transpose it again on the GPU
-    int VARIABLE_IS_NOT_USED snps,
-    int VARIABLE_IS_NOT_USED indiv, // actual number of individuals, not N/4 rounded up
-	       double VARIABLE_IS_NOT_USED *f,  // vector guaranteed to be of length  dsnps
-    int VARIABLE_IS_NOT_USED n, 
-    void VARIABLE_IS_NOT_USED **GPU_obj) {
-  BUG;
-    }
-void dgemm_compressed_gpu(
-    bool VARIABLE_IS_NOT_USED trans, //
-    void VARIABLE_IS_NOT_USED *GPU_obj,
-    //    double *f,
-    int VARIABLE_IS_NOT_USED n,     // number of columns of matrix B
-    double VARIABLE_IS_NOT_USED *B,  // matrix of dimensions (nsnps, n) if trans =
-                // "N" and (nindiv,n) if trans = "T"
-    int VARIABLE_IS_NOT_USED ldb,
-    int VARIABLE_IS_NOT_USED centered,
-    int VARIABLE_IS_NOT_USED normalized,
-    double VARIABLE_IS_NOT_USED *C,
-    int VARIABLE_IS_NOT_USED ldc
-			  ) {
-  BUG;
-}
-void freegpu(void VARIABLE_IS_NOT_USED **GPU_obj){
-  BUG;
-}
-#endif
-
-		   
 void plinkToSxI(char *plink, char *plink_tr, 
 	      Long snps, Long indiv,
-	      int Coding,
 	      double *f, 
 	      int max_n,
 	      void**compressed) {

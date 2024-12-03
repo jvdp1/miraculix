@@ -30,7 +30,6 @@ TO DO
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "Automiraculix.h"
 #include "5codesgpu.h"
 
 
@@ -87,8 +86,7 @@ void plink2compressed(char *plink,
   // exit(99);
  //  printf("c byte 1:5 = %d %d %d %d %d\n", *plink, *(plink+1), *(plink+2), *(plink+3), *(plink+4));
 
-  plinkToSxI(plink, plink_transposed, snps, indiv, FiveCodes, f, max_n,
-	     compressed);
+  plinkToSxI(plink, plink_transposed, snps, indiv, f, max_n, compressed);
   return; 
 }
 

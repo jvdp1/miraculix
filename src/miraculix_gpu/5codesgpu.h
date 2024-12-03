@@ -43,7 +43,6 @@ extern "C" {
 		   int variant, int print_details);
   void plinkToSxI(char *plink, char *plink_transposed, 
 		  long snps, long indiv, // long OK
-		  int coding,
 		  double *f, 
 		  int max_n,
 		  void**compressed);

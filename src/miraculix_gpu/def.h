@@ -18,19 +18,11 @@
  limitations under the License.
 */
 
-/// sysconf (_SC_NPROCESSORS_ONLN) // number of cores available
-// int get_nprocs (void) // dito
-
 #ifndef Miraculix_def_H
 #define Miraculix_def_H 1
 
-//
 #define STAND_ALONE 1
 
-
-#if ! defined pkg
-#define pkg "miraculix" // RFU DELETE
-#endif
 
 // #define this_file this_file_in_miraculix
 
@@ -81,45 +73,8 @@
 #endif
 #endif
 
-#include "Automiraculix.h"
 
-
-//#define SCHLATHERS_MACHINE 1
-//
-//#define.*SCHLATHER_DEBUGGING 1
-//#define SHOWFREE true
-
-#if defined  SCHLATHERS_MACHINE
-//
 #define INTEGERX INTEGER
-//#define INTEGERX(A) __extension__ ({printf("int: %s line %d\n", __FILE__, __LINE__); INTEGER(A);})
-//
-//#u ndef INDIVIDUALS
-//#define INDIVIDUALS  __extension__ ({printf("indiv: %s line %d\n", __FILE__, __LINE__); 2;})
-
-//#u ndef LDA
-//#define LDA __extension__ ({printf("ldat: %s line %d\n", __FILE__, __LINE__); 11;})
-
-#else
-#define INTEGERX INTEGER
-#endif
-
-// #define DEBUG 1
-// #define GPU_STANDALONE 1
-
-
-
-
-//#define NO_OMP 1
-
-
-
-#if ! defined assert
-#define assert(X) if (__extension__ (X)) {} else 			\
-    RFERROR4("'assert' failed in function '%.50s' (%.50s, line %d) %.200s.", \
-	     __FUNCTION__, __FILE__, __LINE__, CONTACT)
-#endif
-
 
 extern bool debugging;
 
