@@ -3,7 +3,7 @@ DEBUG=true
 CUTLASS_PATH=../cutlass/include/
 CUTLASS_UTILS=../cutlass/tools/util/include
 
-cu_nums_11= 70 75 80 
+cu_nums_11= 70 75 80 90
 CU_NUMS_11=$(subst $() $(),;,$(cu_nums_11))
 CU_FLAGS_11=$(foreach i,$(cu_nums_11),--generate-code arch=compute_$(i),code=sm_$(i)) -DCUTLASS_NVCC_ARCHS='$(CU_NUMS_11)' 
 
@@ -13,7 +13,7 @@ CU_FLAGS_12=$(foreach i,$(cu_nums_12),--generate-code arch=compute_$(i),code=sm_
 
 
 NVCC=nvcc
-CXXFLAGS=-Xcompiler --std=c++14 -Xcompiler -fopenmp  -Xcompiler -fPIC -Xcompiler -g -x cu -DDO_PARALLEL -DJULIA_COMPILE -I$(CUTLASS_PATH) -I$(CUTLASS_UTILS) -I./ -DCOMMIT_ID=\"$(shell git rev-parse --short HEAD)\" 
+CXXFLAGS=-Xcompiler --std=c++17 -Xcompiler -fopenmp  -Xcompiler -fPIC -Xcompiler -g -x cu -DDO_PARALLEL -DJULIA_COMPILE -I$(CUTLASS_PATH) -I$(CUTLASS_UTILS) -I./ -DCOMMIT_ID=\"$(shell git rev-parse --short HEAD)\" 
 LIBS=-L${CUDA_HOME}/lib64 -lcudart -lcublas -lcusolver -lcusparse -lcusolver  -Xcompiler -fopenmp
 
 ifeq ($(DEBUG), true)
