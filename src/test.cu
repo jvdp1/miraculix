@@ -70,9 +70,11 @@ int main() {
 
   // Problem size 
   //TODO: make these args
-  int length_m = 1024 * 10;
+  int length_m = 1024 * 200;
   int length_n = 16;
-  int length_k = 1024 * 5;
+  int length_k = 1024 * 50;
+
+  printf("Dimensions: m %d, k %d, n %d\n", length_m, length_k, length_n);
 
   // Create a tuple of problem size for matrix multiplication
   // Terminology:
@@ -86,28 +88,32 @@ int main() {
                                                length_k / 4);
   cutlass::gemm::GemmCoord problem_size_t_packed(length_m / 4, length_n,
                                                  length_k);
-  ElementC_ alpha = ElementC_(1);
-  ElementC_ beta = ElementC_(0);
+//  ElementC_ alpha = ElementC_(1);
+//  ElementC_ beta = ElementC_(0);
 
-  printf("Allocating tensors\n");
+  printf("Allocating tensors 1\n");
 
   // Initialize tensors using CUTLASS helper functions
   cutlass::HostTensor<ElementA_, LayoutA_> tensor_a_small(
       problem_size_small.mk());
+  printf("Allocating tensors 2\n");
   cutlass::HostTensor<ElementA_, LayoutA_> tensor_a_full(
       (ref == reference_none) ? problem_size_small.mk()
                               : problem_size_full.mk());
+  printf("Allocating tensors 3\n");
   cutlass::HostTensor<uint8_t, LayoutA_> tensor_a_packed(
       problem_size_packed.mk());
+  printf("Allocating tensors 4\n");
   cutlass::HostTensor<uint8_t, LayoutA_> tensor_a_t_packed(
       problem_size_t_packed.mk());
+  printf("Allocating tensors 5\n");
   cutlass::HostTensor<double, LayoutB_> tensor_b_full(problem_size_full.kn());
   cutlass::HostTensor<ElementB_, LayoutB_> tensor_b_packed(
       problem_size_packed.kn());
-  cutlass::HostTensor<ElementC_, LayoutC_> tensor_c(problem_size_full.mn());
+//  cutlass::HostTensor<ElementC_, LayoutC_> tensor_c(problem_size_full.mn());
   cutlass::HostTensor<ElementC_, LayoutC_> tensor_d(problem_size_full.mn());
-  cutlass::HostTensor<ElementC_, LayoutC_> tensor_d_t(problem_size_full.kn());
-  cutlass::HostTensor<ElementC_, LayoutC_> tensor_ref_d(problem_size_full.mn());
+//  cutlass::HostTensor<ElementC_, LayoutC_> tensor_d_t(problem_size_full.kn());
+//  cutlass::HostTensor<ElementC_, LayoutC_> tensor_ref_d(problem_size_full.mn());
 
   printf("Simulating tensor content\n");
   // Simulate tensors using CUTLASS helper functions
@@ -172,9 +178,9 @@ int main() {
 //     }
 //   }
 
-  cutlass::reference::host::TensorFill(tensor_c.host_view());
+//  cutlass::reference::host::TensorFill(tensor_c.host_view());
   cutlass::reference::host::TensorFill(tensor_d.host_view());
-  cutlass::reference::host::TensorFill(tensor_ref_d.host_view());
+//  cutlass::reference::host::TensorFill(tensor_ref_d.host_view());
 
   // Copy data from host to GPU
   printf("Copying data to the device\n");
@@ -189,10 +195,11 @@ int main() {
     return 1;
   }
 
-  tensor_c.sync_device();
+  printf("Copying data to the device\n");
+//  tensor_c.sync_device();
   tensor_d.sync_device();
-  tensor_d_t.sync_device();
-  tensor_ref_d.sync_device();
+//  tensor_d_t.sync_device();
+//  tensor_ref_d.sync_device();
 
  
   // Start calculation on GPU
@@ -219,6 +226,7 @@ int main() {
   //     length_n);
   
 
+/*
   // Start reference calculation
   printf("Syncing reference tensors\n");
   tensor_a_full.sync_device();
@@ -257,6 +265,7 @@ int main() {
       printf("(%.3lf, %.3lf), ", *(tensor_ref_d.host_data()+i),*(tensor_d.host_data()+i));
     }
   }
+*/
   printf("\n");
 
   freegpu(&GPU_obj);

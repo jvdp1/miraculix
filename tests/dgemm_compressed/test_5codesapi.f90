@@ -33,7 +33,7 @@ program test_5codesAPI
  integer, parameter :: ncol =  10
  integer, parameter :: nrepet = 3
  integer, parameter :: nmin = merge(1, 0, nrepet > 1)
- logical, parameter :: ltest = .true.
+ logical, parameter :: ltest = .false.
  logical, parameter :: lcenter = .true.
  logical, parameter :: lverbose = .true.
 
@@ -133,6 +133,7 @@ program test_5codesAPI
 #ifdef CUDA
  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  !Transpose the 1-byte genotype matrix
+ write(*,'(a)')'Transpose the 1-byte genotype matrix'
  print*, mat%ngen, mat%nsnp, size(mat%cov%ival, 2),mat%cov%nrows
  call transpose_integermatrix(mat%ngen, mat%nsnp, size(mat%cov%ival, 2)&
                               , mat%cov%ival, idummy&

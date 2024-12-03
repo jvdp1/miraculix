@@ -1,12 +1,12 @@
 
 CUDA=true
-COMPILER=intel
+COMPILER=gcc
 
 ifeq ($(COMPILER), gcc)
  FORTRAN=gfortran
  FFLAGS=-O3 -ftree-vectorize -mtune=native -march=native 
  FFLAGS+=-cpp -fopenmp 
- LDFLAGS=-llapack -lblas -lgfortran -lm -lquadmath -fopenmp
+ LDFLAGS=-lgfortran -lm -fopenmp -lstdc++
 
 else ifeq ($(COMPILER), intel)
  FORTRAN=ifort
@@ -19,13 +19,13 @@ endif
 
 SRC_DIR=$(PWD)/../../src
 FFLAGS+=-I$(SRC_DIR)/bindings/Fortran
-LDFLAGS+=-L$(SRC_DIR)/miraculix -L$(SRC_DIR)/bindings/Fortran -L$(SRC_DIR)/cuda
-LDFLAGS+= -Wl,-rpath=$(SRC_DIR)/miraculix -Wl,-rpath=$(SRC_DIR)/bindings/Fortran -Wl,-rpath=$(SRC_DIR)/cuda 
+LDFLAGS+=-L$(SRC_DIR)/miraculix_gpu -L$(SRC_DIR)/bindings/Fortran -L$(SRC_DIR)/cuda
+LDFLAGS+= -Wl,-rpath=$(SRC_DIR)/miraculix_gpu -Wl,-rpath=$(SRC_DIR)/bindings/Fortran -Wl,-rpath=$(SRC_DIR)/cuda 
 LDFLAGS+=-lmiraculix -lfortran 
 
 
 ifeq ($(CUDA), true)
-LDFLAGS+=-L${CUDA_HOME}/lib64 -lcudart -lcublas -lcusolver -lcusparse -lcusolver -ldgemm_compressed_cuda
+LDFLAGS+=-L${CUDA_HOME}/lib64  -ldgemm_compressed_cuda -lcuda -lcudart -lcublas -lcusolver -lcusparse -lcusolver -lstdc++
 FFLAGS+=-DCUDA
 endif
 
@@ -34,7 +34,7 @@ OBJ = $(SRC:.f90=.o)
 MODS = $(OBJ:.o=.mod)
 
 LIBFORTRAN = $(SRC_DIR)/bindings/Fortran/libfortran.a
-LIBMIRACULIX = $(SRC_DIR)/miraculix/libmiraculix.a
+LIBMIRACULIX = $(SRC_DIR)/miraculix_gpu/libmiraculix.a
 
 EXE = test_5codesapi
 EXET = test_5codesapi_t

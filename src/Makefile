@@ -23,7 +23,7 @@ LIBS+=-L$(MKL_LIB_DIR) -L$(MKL_LIB_COM) -lm -lmkl_intel_lp64 -lmkl_core -lmkl_gn
 endif
 
 .PHONY: all
-all: libmiraculix libmiraculixGPU libfortran #$(OBJECTS)
+all: libmiraculixGPU libfortran #$(OBJECTS)
 
 %.o: %.cu 
 	$(NVCC) $(CXXFLAGS) -c $< -o $@
@@ -43,6 +43,8 @@ standalone: $(CUSTANDALONE)
 
 .PHONY: libdgemm
 libmiraculixGPU:
+	cp Makefile_miraculix ./miraculix_gpu/Makefile
+	cd miraculix_gpu && make lib
 	cd cuda && make lib
 
 .PHONY: libfortran
@@ -53,3 +55,5 @@ libfortran:
 clean:
 	$(RM) $(OBJECTS) $(CUOBJECTS) *.a *.out *.o 
 	$(RM) miraculix/*.o miraculix/*.a
+	$(RM) miraculix_gpu/*.o miraculix_gpu/*.a
+	$(RM) cuda/*.o cuda/*.a
