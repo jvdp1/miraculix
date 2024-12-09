@@ -57,3 +57,4 @@ clean:
 	$(RM) miraculix/*.o miraculix/*.a
 	$(RM) miraculix_gpu/*.o miraculix_gpu/*.a
 	$(RM) cuda/*.o cuda/*.a
+	$(MAKE) --directory=bindings/Fortran clean

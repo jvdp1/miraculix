@@ -30,7 +30,7 @@ program test_5codesAPI
  !$ use omp_lib
  implicit none
 
- integer, parameter :: ncol =  50
+! integer, parameter :: ncol =  50
  integer, parameter :: nrepet = 6
  integer, parameter :: nmin = merge(1, 0, nrepet > 1)
  logical, parameter :: ltest = .false.
@@ -46,8 +46,11 @@ program test_5codesAPI
  integer :: irepet
  integer :: i, j, io, err, nrow
 
+ integer :: ncol
+
  integer :: idummy, compressedn, lda_atrans
  integer(kind=int8), allocatable :: trans_ival(:,:)
+ character(len=30) :: cdummy
  character(len=30) :: freqfile
  real(kind=real64), allocatable :: freq(:)
  real(kind=real64), allocatable :: compfreq(:)
@@ -72,8 +75,11 @@ program test_5codesAPI
  type(c_ptr) :: c_plinkbed_transposed
  type(c_ptr) :: c_compressed
 
- call get_command_argument(1,value=mat%genfile,status=io)
- call get_command_argument(2,value=freqfile,status=io)
+ call get_command_argument(1,value=cdummy,status=io)
+ read(cdummy,*)ncol
+
+ call get_command_argument(2,value=mat%genfile,status=io)
+ call get_command_argument(3,value=freqfile,status=io)
 
 
 #ifdef CUDA
@@ -191,6 +197,7 @@ program test_5codesAPI
   !$ write(*,'(a,g0.6)')'  Elapsed time - C: ', c_t2 - c_t1
   !$ if (irepet > nmin) c_ttot = c_ttot + c_t2 - c_t1
   
+  write(*,'(*(g0,1x))')c_C(1,:)
 
   if(ltest)then
 

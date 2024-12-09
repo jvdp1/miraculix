@@ -47,22 +47,8 @@ void setOptions_compressed(int use_gpu, // 0 == use CPU
 			   int variant,  // 0 == use internal {0,32,128,256}
 			   int print_details) {//1 == get some messages
 
-
-  //  printf("floatLoop = %d \n", floatLoop); exit(99);
     printf("get started\n");
-//    getStartedOptions();
     printf("GPU setting options in setOptions_compressed\n");
-/*    setOptions5(use_gpu, cores, floatLoop,	     
-	      meanSubstract == 1 || meanSubstract == 2,  // meanV
-	      meanSubstract == 1 || meanSubstract == 3,  // meanSxI
-	      !ignore_missings, // ! 
-	      !do_not_center,   // !
-	      do_normalize,
-	      !use_miraculix_freq,
-	      variant,
-	      print_details
-	      );
-  */
 }
 
 
@@ -79,13 +65,6 @@ void plink2compressed(char *plink,
                       double *f, 
                       int max_n,
 		      void**compressed) {
-
-  // setOptions_compressed(0, 6, 0, 0, 0, 0, 0, 0, 1);
-
-  //  int nbytes = indiv /4;   printf("p2c snps=%d indiv=%d max_n=%d bytes/indiv=%d\n", snps, indiv, max_n, nbytes);
-  // exit(99);
- //  printf("c byte 1:5 = %d %d %d %d %d\n", *plink, *(plink+1), *(plink+2), *(plink+3), *(plink+4));
-
   plinkToSxI(plink, plink_transposed, snps, indiv, f, max_n, compressed);
   return; 
 }
