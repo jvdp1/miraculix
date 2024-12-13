@@ -52,6 +52,7 @@ program test_5codesAPI_t
  integer(kind=int8), allocatable :: trans_ival(:,:)
  character(len=30) :: cdummy
  character(len=30) :: freqfile
+ real(kind=real64) :: ctime(nrepet)
  real(kind=real64), allocatable :: freq(:)
  real(kind=real64), allocatable :: compfreq(:)
  real(kind=real64), allocatable :: compfreq_test(:)
@@ -194,6 +195,7 @@ program test_5codesAPI_t
   !$ c_t1 = omp_get_wtime()
   call c_dgemm_compressed('t', c_compressed, c_ncol, c_B, c_indiv, c_C, c_snps)
   !$ c_t2 = omp_get_wtime()
+  !$ ctime(irepet) =  c_t2 - c_t1
   !$ write(*,'(a,g0.6)')'  Elapsed time - C: ', c_t2 - c_t1
   !$ if (irepet > nmin) c_ttot = c_ttot + c_t2 - c_t1
   
@@ -219,7 +221,7 @@ program test_5codesAPI_t
   endif
 
  enddo
- !$ write(*,'("Average time - C: ", g0.6)')c_ttot/real(nrepet-nmin)
+ !$ write(*,'("Average time - C: ", *(g0.6,1x))')c_ttot/real(nrepet-nmin), sqrt(var(ctime(nmin+1:nrepet)))
  !$ if(ltest)write(*,'("Average time - M: ", g0.6)')ttot/real(nrepet-nmin)
 
  if (err > 0) then  
@@ -319,6 +321,7 @@ subroutine check_freq(app, f, f_)
   enddo
  else
   write(*,'(a)')app//': Allele frequencies: all abs differences < 10.^-3'
+  write(*,'(a, g0)')app//': Max absolue difference: ',maxval(abs(f_ - f))
  endif
 
 end subroutine
@@ -367,5 +370,19 @@ subroutine check_matrix(app_c, app_c_, C, C_, count_, err)
  endif
 
 end subroutine
+
+function var(x) result(res)
+  real(real64), intent(in) :: x(:)
+  real(real64) :: res
+
+  real(real64) :: n
+  real(real64) :: mean
+
+  n = real(size(x), real64)
+  mean = sum(x) / n
+
+  res = sum((x - mean)**2) / (n - 1)
+
+end function
 
 end program

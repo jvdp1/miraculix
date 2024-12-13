@@ -1,5 +1,5 @@
 CUDA=true
-COMPILER=gcc
+COMPILER=intel
 
 #Martin's includes:
 MK_SRC=./
@@ -45,6 +45,13 @@ $(LIB): $(ALL)
 	ar cr $@ $(ALL)
 
 
+vtest: all
+	valgrind --tool=memcheck --leak-check=full --num-callers=20 ./$(EXE) data/small.bed data/small.freq
+
+
+vtestt: all
+	valgrind --tool=memcheck --leak-check=full --num-callers=20 ./$(EXET) data/small.bed data/small.freq
+
 .PHONY: clean lib
 clean: 
-	rm *.o *.a
+	rm *.o

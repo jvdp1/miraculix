@@ -8,7 +8,7 @@ MMAGPU_FILE=../paper_miraculix/miraculix/src/mmagpu.cu
 CUTLASS_PATH=./cutlass/include/
 CUTLASS_UTILS=./cutlass/tools/util/include
 
-cu_nums= 70 75 80 90
+cu_nums= 70 75 80 90 90a
 CU_NUMS=$(subst $() $(),;,$(cu_nums))
 CU_FLAGS=$(foreach i,$(cu_nums),--generate-code arch=compute_$(i),code=sm_$(i)) -DCUTLASS_NVCC_ARCHS='$(CU_NUMS)' 
 
