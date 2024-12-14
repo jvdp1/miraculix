@@ -43,7 +43,6 @@ standalone: $(CUSTANDALONE)
 
 .PHONY: libdgemm
 libmiraculixGPU:
-	cp Makefile_miraculix ./miraculix_gpu/Makefile
 	cd miraculix_gpu && make lib
 	cd cuda && make lib
 

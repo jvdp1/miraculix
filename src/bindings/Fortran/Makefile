@@ -1,4 +1,4 @@
-COMPILER=intel
+COMPILER=gcc
 
 ifeq ($(COMPILER), gcc)
  FORTRAN=gfortran
