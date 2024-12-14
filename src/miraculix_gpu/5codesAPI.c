@@ -18,21 +18,9 @@
 */
 
 
-
-/******** API **********
-
-TO DO
-
-
- ****** END API *********/
-
- 
-
 #include <stdio.h>
 #include <stdlib.h>
-#include "5codesgpu.h"
-
-
+#include "5codesAPI.h"
 
 
 // if value unknown set it to 0.

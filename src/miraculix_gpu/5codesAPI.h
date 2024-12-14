@@ -17,8 +17,6 @@
  limitations under the License.
 */
 
-extern "C" {
-  
   
   void plinkToSxI(char *plink, char *plink_transposed, 
 		  long snps, long indiv, // long OK
@@ -32,4 +30,3 @@ extern "C" {
   
   void free5(void **compressed);
   
-}

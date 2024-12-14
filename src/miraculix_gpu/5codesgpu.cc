@@ -1,4 +1,3 @@
-
 /*
  Authors 
  Martin Schlather, martin.schlather@uni-mannheim.de
@@ -18,18 +17,11 @@
  limitations under the License.
 */
 
-#ifndef basic_miraculix_H
-
-#define basic_miraculix_H 1
-
-#include "def.h"
-#include "compatibility.general.h"
-
-#endif
-
-
 #include "5codesgpu.h"
 #include "GPUapi.h"
+#include <inttypes.h>
+
+typedef int64_t Long;
 
 void plinkToSxI(char *plink, char *plink_tr, 
 	      Long snps, Long indiv,
