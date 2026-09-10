@@ -9,9 +9,14 @@ include makefile.c.mk
 ifeq ($(COMPILER), gcc)
  CC=g++
  CCOMPILER=gcc
- CFLAGS=-I/usr/local/include -O2 $(DEBUGGING_FLAG) -mtune=native -march=native
- CCFLAGS=-I/usr/local/include -O2 -fopenmp -pthread $(DEBUGGING_FLAG) -mtune=native -march=native
- LINK_FLAGS=-llapack -lblas -lgfortran -lm -lquadmath -fopenmp
+ # No -mtune/-march=native here: per-file SIMD levels are set by the explicit
+ # pattern rules in makefile.c.mk (%256.o/%avx2.o -> AVX2_FLAG, etc.). A blanket
+ # -march=native enables AVX512 in every TU and breaks the scalar AVXTYPE=LongDouble
+ # instantiations in 5codesUint.cc (AVX2 gV5_Loop2B paths vs scalar LongDouble).
+ CFLAGS=-I/usr/local/include -O2 $(DEBUGGING_FLAG) -fPIC
+ CCFLAGS=-I/usr/local/include -O2 -fopenmp -pthread $(DEBUGGING_FLAG) -fPIC
+
+ LINK_FLAGS=-lgfortran -lm -lquadmath -fopenmp
 
  LINKER=-std=gnu++14 -L/usr/local/lib -L/usr/lib64
 
