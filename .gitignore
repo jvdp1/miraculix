@@ -19,3 +19,4 @@
 
 *.optrpt
 *.tgz
+**__pycache__
