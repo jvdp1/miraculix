@@ -137,3 +137,15 @@ def test_read_bed_and_transpose_roundtrip(tmp_path):
     np.testing.assert_array_equal(plink, packed)
     np.testing.assert_allclose(freq, genotype.mean(axis=0, dtype=np.float64) / 2.0)
     np.testing.assert_array_equal(plink_t, _transpose_packed(packed, snps=n_snps, indiv=n_indiv))
+
+
+def test_use_gpu_requires_cuda_enabled_library(loaded_library):
+    assert not mx.has_cuda_dgemm_support()
+    with pytest.raises(mx.MiraculixError, match="CUDA-enabled"):
+        mx.set_options(use_gpu=True, verbose=0)
+
+
+def test_solve_apis_require_cuda_symbols(loaded_library):
+    assert not mx.has_cuda_solve_symbols()
+    with pytest.raises(mx.MiraculixError, match="CUDA solve symbols"):
+        mx.dense_solve(np.eye(2), np.eye(2))

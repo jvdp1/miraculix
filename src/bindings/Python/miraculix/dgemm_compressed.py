@@ -6,6 +6,7 @@ from ._lib import (
     MiraculixError,
     check_status,
     matrix_pointer,
+    require_cuda_dgemm_support,
     require_library,
     require_numpy_matrix,
     require_numpy_vector,
@@ -55,6 +56,8 @@ def set_options(
     verbose: int = 1,
 ) -> None:
     lib = require_library()
+    if use_gpu:
+        require_cuda_dgemm_support()
     lib.setOptions_compressed(
         int(use_gpu),
         int(cores),

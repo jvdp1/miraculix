@@ -7,6 +7,7 @@ from ._lib import (
     check_status,
     matrix_pointer,
     require_library,
+    require_cuda_solve_support,
     require_numpy_matrix,
     require_numpy_vector,
     require_symbol,
@@ -32,6 +33,7 @@ class SparseSolveHandle:
         if self.closed:
             return
         lib = require_library()
+        require_cuda_solve_support()
         require_symbol("free_sparse_gpu")
         status = ctypes.c_int(0)
         lib.free_sparse_gpu(ctypes.byref(self._ptr), ctypes.byref(status))
@@ -62,6 +64,7 @@ def sparse_init(
     is_lower: bool,
 ) -> SparseSolveHandle:
     lib = require_library()
+    require_cuda_solve_support()
     require_symbol("sparse2gpu")
     V = require_numpy_vector(V, dtype=np.float64, name="V")
     I = require_numpy_vector(I, dtype=np.int64, name="I")
@@ -91,6 +94,7 @@ def sparse_init(
 
 def sparse_solve(handle: SparseSolveHandle, transA: str, B: np.ndarray, *, m: int) -> np.ndarray:
     lib = require_library()
+    require_cuda_solve_support()
     require_symbol("dcsrtrsv_solve_gpu")
     if transA not in {"n", "N", "t", "T"}:
         raise ValueError("transA must be one of 'n', 'N', 't', or 'T'")
@@ -121,6 +125,7 @@ def dense_solve(
     oversubscribe: bool = False,
 ):
     lib = require_library()
+    require_cuda_solve_support()
     require_symbol("potrs_solve_gpu")
     M = require_numpy_matrix(M, dtype=np.float64, name="M", order="C")
     B = require_numpy_matrix(B, dtype=np.float64, name="B", order="C")

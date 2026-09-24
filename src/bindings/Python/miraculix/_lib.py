@@ -168,6 +168,41 @@ def require_symbol(name: str):
     return symbol
 
 
+def has_symbol(name: str) -> bool:
+    lib = require_library()
+    return getattr(lib, name, None) is not None
+
+
+def has_cuda_solve_symbols() -> bool:
+    return all(
+        has_symbol(name)
+        for name in ("sparse2gpu", "dcsrtrsv_solve_gpu", "free_sparse_gpu", "potrs_solve_gpu")
+    )
+
+
+def has_cuda_dgemm_support() -> bool:
+    # The public dgemm entrypoint is shared between CPU and GPU modes.
+    # In the current build layout, a CUDA-linked shared library also exports
+    # the dedicated solve/GPU symbols, so reuse that as the capability signal.
+    return has_cuda_solve_symbols()
+
+
+def require_cuda_solve_support() -> None:
+    if not has_cuda_solve_symbols():
+        raise MiraculixError(
+            "The loaded library does not include CUDA solve symbols. "
+            "Build a CUDA-enabled miraculix.so before using sparse/dense GPU solve APIs."
+        )
+
+
+def require_cuda_dgemm_support() -> None:
+    if not has_cuda_dgemm_support():
+        raise MiraculixError(
+            "The loaded library does not appear to be CUDA-enabled for dgemm_compressed. "
+            "Build miraculix.so with CUDA support before calling set_options(use_gpu=True)."
+        )
+
+
 def require_numpy_matrix(array: np.ndarray, *, dtype, name: str, order: str = "F") -> np.ndarray:
     if not isinstance(array, np.ndarray):
         raise TypeError(f"{name} must be a numpy.ndarray")
