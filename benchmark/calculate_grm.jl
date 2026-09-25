@@ -36,8 +36,9 @@ MODULE_PATH = ROOT_DIR * "/src/bindings/Julia/miraculix.jl"
 LIBRARY_PATH = ROOT_DIR * "/src/miraculix/miraculix.so"
 DATA_DIR = ROOT_DIR * "/data"
 
-DATA_FILE = DATA_DIR * "/mobps_simulation.bed"
-GRM_FILE = DATA_DIR * "/mobps_simulation.rel"
+DATA_FILE = DATA_DIR * "/n2500_m5000.bed"
+
+#GRM_FILE = DATA_DIR * "/mobps_simulation.rel"
 
 # Control miraculix verbosity
 ENV["PRINT_LEVEL"] = "1";
@@ -60,7 +61,8 @@ miraculix.dgemm_compressed.set_options(use_gpu=true, verbose=1)
 
 # Read-in data from PLINK binary format
 @info "Reading in data from $DATA_FILE and transpose it"
-@timev "Preprocessing" begin
+
+@timev "\n## Preprocessing" begin
     # Read PLINK data and calculate allele frequencies
     wtime = @elapsed plink, freq, n_snps, n_indiv = miraculix.read_plink.read_bed(DATA_FILE, coding_twobit = true, calc_freq = true, check_for_missings = false)
     @debug "Time for reading: $wtime s."
@@ -79,21 +81,23 @@ miraculix.dgemm_compressed.set_options(use_gpu=true, verbose=1)
 end
 
 # Calculate the cross-product in miraculix
-@info "Calculating Cross-Product"
+@info "\nCalculating Cross-Product"
 
-@timev "Cross-Product" begin
+@timev "\n## Cross-Product" begin
     CP = miraculix.crossproduct.snp_crossprod(plink_transposed, n_snps, n_indiv, is_snpmajor = false, is_plink_format = false)
 end
 
+@info "\nCP"
 @show CP[1:5, 1:5]
 
 # Calculate the GRM in miraculix
-@info "Calculating the genomic relationship matrix following VanRaden 1 approach"
+@info "\nCalculating the genomic relationship matrix following VanRaden 1 approach"
 
-@timev "GRM VanRaden 1" begin
+@timev "\n## GRM VanRaden 1" begin
     G = miraculix.crossproduct.grm(plink_transposed, n_snps, n_indiv, is_plink_format = false, allele_freq = vec(freq), do_scale = true)
 end
 
+@info "\nG"
 @show G[1:5,1:5]
 
 
