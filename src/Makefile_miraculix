@@ -37,10 +37,9 @@ SHARED_LIB = miraculix.so
 
 ifeq ($(CUDA), true)
 CUDA_LIB = ../cuda/
-LINK_FLAGS+=-L${CUDA_HOME}/lib64 -lcudart -lcublas -lcusolver -lcusparse -lcusolver 
 # To expose CUDA functions which aren't use by core miraculix, we need to link the library as a whole archive
 LINK_FLAGS+=-L$(CUDA_LIB) -Wl,--whole-archive -ldgemm_compressed_cuda -Wl,--no-whole-archive 
-
+LINK_FLAGS+=-L${CUDA_HOME}/lib64 -lcudart -lcublas -lcusolver -lcusparse -lcusolver
 
 CCFLAGS+=-DCUDA
 FFLAGS+=-DCUDA

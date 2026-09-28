@@ -22,6 +22,7 @@ using Base;
     using LoopVectorization;
 #    using Test
     using Logging
+    using BenchmarkTools
 end
 
 # =====================
@@ -29,6 +30,9 @@ end
 # =====================
 
 global_logger(ConsoleLogger(stderr, Logging.Debug))
+global_logger(ConsoleLogger(stderr, Logging.Info))
+
+filename = ARGS[1]
 
 ROOT_DIR = string(@__DIR__) * "/.."
 
@@ -36,7 +40,8 @@ MODULE_PATH = ROOT_DIR * "/src/bindings/Julia/miraculix.jl"
 LIBRARY_PATH = ROOT_DIR * "/src/miraculix/miraculix.so"
 DATA_DIR = ROOT_DIR * "/data"
 
-DATA_FILE = DATA_DIR * "/n2500_m5000.bed"
+#DATA_FILE = DATA_DIR * "/n2500_m5000.bed"
+DATA_FILE = DATA_DIR * "/" * filename
 
 #GRM_FILE = DATA_DIR * "/mobps_simulation.rel"
 
@@ -83,12 +88,32 @@ end
 # Calculate the cross-product in miraculix
 @info "\nCalculating Cross-Product"
 
+@timev "\n## Cross-Product (Warm-up)" begin
+    CP = miraculix.crossproduct.snp_crossprod(plink_transposed, n_snps, n_indiv, is_snpmajor = false, is_plink_format = false) #warm-up
+end
+
+@info "\nShow CP"
+@show CP[1:5, 1:5]
+
+# Benchmark
+
 @timev "\n## Cross-Product" begin
     CP = miraculix.crossproduct.snp_crossprod(plink_transposed, n_snps, n_indiv, is_snpmajor = false, is_plink_format = false)
 end
 
-@info "\nCP"
-@show CP[1:5, 1:5]
+# micro‑benchmark (multiple runs, excludes compilation)
+b = @benchmark miraculix.crossproduct.snp_crossprod(plink_transposed, n_snps, n_indiv,
+                                                   is_snpmajor=false, is_plink_format=false) setup=(GC.gc())
+
+println("\n#######################################")
+println("#### Cross-Product")
+println(b)                     # full statistics
+println(minimum(b))            # best time
+println(mean(b))               # average time
+println(median(b))             # median time
+println("#######################################")
+
+
 
 # Calculate the GRM in miraculix
 @info "\nCalculating the genomic relationship matrix following VanRaden 1 approach"
@@ -97,8 +122,20 @@ end
     G = miraculix.crossproduct.grm(plink_transposed, n_snps, n_indiv, is_plink_format = false, allele_freq = vec(freq), do_scale = true)
 end
 
-@info "\nG"
+@info "\nShow G"
 @show G[1:5,1:5]
+
+# micro‑benchmark (multiple runs, excludes compilation)
+b = @benchmark miraculix.crossproduct.grm(plink_transposed, n_snps, n_indiv, is_plink_format = false, allele_freq = vec(freq), do_scale = true) setup=(GC.gc())
+
+println("\n#######################################")
+println("#### GRM VanRaden 1")
+println(b)                     # full statistics
+println(minimum(b))            # best time
+println(mean(b))               # average time
+println(median(b))             # median time
+println("#######################################")
+
 
 
 #@testset "GRM comparison" begin
