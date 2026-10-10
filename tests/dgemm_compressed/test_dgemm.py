@@ -104,6 +104,46 @@ def gemm_transposed(seed: int, use_gpu: bool, plink: np.ndarray, freq: np.ndarra
     # assert that C and C_np are equal
     assert np.allclose(C, C_np, rtol=1e-7, atol=1e-9)
 
+def loop_gemm(seed: int, use_gpu: bool, plink: np.ndarray, freq: np.ndarray, n_snps: int, n_indiv: int, ncol: int) -> None:
+    plink_transposed = None
+    if use_gpu:
+        plink_transposed = mx.transpose_plink(plink, snps=n_snps, indiv=n_indiv)
+
+    rng = np.random.default_rng(seed)
+
+    handle = mx.init_compressed(plink, plink_transposed, n_snps, n_indiv, freq, max_ncol=ncol, use_gpu=use_gpu)
+
+    for iter in range(10):
+        # Random matrix
+        B = np.asfortranarray(rng.standard_normal((n_snps, ncol), dtype=np.float64))
+
+        # Miraculix computation
+        C = mx.dgemm_compressed(handle, B, snps=n_snps, indiv=n_indiv, transpose=False)
+        header(C)
+
+        # Random matrix
+        Bt = np.asfortranarray(rng.standard_normal((n_indiv, ncol), dtype=np.float64))
+
+        # Miraculix computation
+        Ct = mx.dgemm_compressed(handle, Bt, snps=n_snps, indiv=n_indiv, transpose=True)
+        header(Ct)
+
+    handle.close()
+
+
+#    # Numpy computation
+#    geno = mx.decompress_bed(plink, n_indiv, n_snps)
+#    geno = geno - 2 * freq
+
+#    C_np = geno @ B
+
+#    header(C_np)
+
+#    # assert that C and C_np are equal
+#    assert np.allclose(C, C_np, rtol=1e-7, atol=1e-9)
+
+
+
 
 def main() -> None:
     args = parse_args()
@@ -129,6 +169,9 @@ def main() -> None:
 
     # test gemm + transposed
     gemm_transposed(args.seed, use_gpu, plink, freq, n_snps, n_indiv, args.ncol)
+
+    # Multiple gemm
+    loop_gemm(args.seed, use_gpu, plink, freq, n_snps, n_indiv, args.ncol)
 
 
 if __name__ == "__main__":
