@@ -1,6 +1,7 @@
 import argparse
 import sys
 from pathlib import Path
+import time
 
 import numpy as np
 
@@ -56,7 +57,10 @@ def gemm(seed: int, use_gpu: bool, plink: np.ndarray, freq: np.ndarray, n_snps: 
     # Miraculix computation
     handle = mx.init_compressed(plink, plink_transposed, n_snps, n_indiv, freq, max_ncol=ncol, use_gpu=use_gpu)
 
+    start = time.perf_counter()
     C = mx.dgemm_compressed(handle, B, snps=n_snps, indiv=n_indiv, transpose=False)
+    end = time.perf_counter()
+    print(f"Miraculix: Wall clock time (s): {end-start:.6f}")
 
     handle.close()
 
@@ -67,7 +71,10 @@ def gemm(seed: int, use_gpu: bool, plink: np.ndarray, freq: np.ndarray, n_snps: 
 
     geno = geno - 2 * freq
 
+    start = time.perf_counter()
     C_np = geno @ B
+    end = time.perf_counter()
+    print(f"Numpy: Wall clock time (s): {end-start:.6f}")
 
     header(C_np)
 
@@ -86,7 +93,10 @@ def gemm_transposed(seed: int, use_gpu: bool, plink: np.ndarray, freq: np.ndarra
     # Miraculix computation
     handle = mx.init_compressed(plink, plink_transposed, n_snps, n_indiv, freq, max_ncol=ncol, use_gpu=use_gpu)
 
+    start = time.perf_counter()
     C = mx.dgemm_compressed(handle, B, snps=n_snps, indiv=n_indiv, transpose=True)
+    end = time.perf_counter()
+    print(f"Miraculix (t): Wall clock time (s): {end-start:.6f}")
 
     handle.close()
 
@@ -97,7 +107,10 @@ def gemm_transposed(seed: int, use_gpu: bool, plink: np.ndarray, freq: np.ndarra
 
     geno = geno - 2 * freq
 
+    start = time.perf_counter()
     C_np = geno.T @ B
+    end = time.perf_counter()
+    print(f"Numpy (t): Wall clock time (s): {end-start:.6f}")
 
     header(C_np)
 
