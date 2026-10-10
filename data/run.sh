@@ -9,8 +9,13 @@ fi
 unzip ${zipfile}
 
 # Plink bed file
-echo "50003 snp 0.05 0.50 0 0" > sim.txt
-./plink --simulate sim.txt --simulate-ncases 49000 --seed 42 --make-bed --out geno
+echo "50003 snp 0.05 0.50 0.5 0.5" > sim.txt
+./plink --simulate sim.txt \
+      --simulate-ncases 50000 \
+      --simulate-ncontrols 0 \
+      --seed 42 \
+      --make-bed \
+      --out geno
 
 # Generate subsets
 nind="2500 10000 50000"
