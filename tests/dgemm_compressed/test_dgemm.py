@@ -21,6 +21,11 @@ def parse_args() -> argparse.Namespace:
         help="Path to miraculix.so",
     )
     parser.add_argument(
+        "--gpu",
+        action=argparse.BooleanOptionalAction,
+        help="Test with NVIDIA GPU",
+    )
+    parser.add_argument(
         "--ncol",
         type=int,
         default=4,
@@ -39,15 +44,17 @@ def header(C: np.ndarray) -> None:
     print("First rows of C:")
     print(C[: min(5, C.shape[0]), : min(5, C.shape[1])])
 
-def gemm(seed: int, plink: np.ndarray, freq: np.ndarray, n_snps: int, n_indiv: int, ncol: int) -> None:
-    #plink_transposed = mx.transpose_plink(plink, snps=n_snps, indiv=n_indiv)
+def gemm(seed: int, use_gpu: bool, plink: np.ndarray, freq: np.ndarray, n_snps: int, n_indiv: int, ncol: int) -> None:
+    plink_transposed = None
+    if use_gpu:
+        plink_transposed = mx.transpose_plink(plink, snps=n_snps, indiv=n_indiv)
 
     # Random matrix
     rng = np.random.default_rng(seed)
     B = np.asfortranarray(rng.standard_normal((n_snps, ncol), dtype=np.float64))
 
     # Miraculix computation
-    handle = mx.init_compressed(plink, None, n_snps, n_indiv, freq, max_ncol=ncol, use_gpu=False)
+    handle = mx.init_compressed(plink, plink_transposed, n_snps, n_indiv, freq, max_ncol=ncol, use_gpu=use_gpu)
 
     C = mx.dgemm_compressed(handle, B, snps=n_snps, indiv=n_indiv, transpose=False)
 
@@ -67,15 +74,17 @@ def gemm(seed: int, plink: np.ndarray, freq: np.ndarray, n_snps: int, n_indiv: i
     # assert that C and C_np are equal
     assert np.allclose(C, C_np, rtol=1e-7, atol=1e-9)
 
-def gemm_transposed(seed: int, plink: np.ndarray, freq: np.ndarray, n_snps: int, n_indiv: int, ncol: int) -> None:
-    #plink_transposed = mx.transpose_plink(plink, snps=n_snps, indiv=n_indiv)
+def gemm_transposed(seed: int, use_gpu: bool, plink: np.ndarray, freq: np.ndarray, n_snps: int, n_indiv: int, ncol: int) -> None:
+    plink_transposed = None
+    if use_gpu:
+        plink_transposed = mx.transpose_plink(plink, snps=n_snps, indiv=n_indiv)
 
     # Random matrix
     rng = np.random.default_rng(seed)
     B = np.asfortranarray(rng.standard_normal((n_indiv, ncol), dtype=np.float64))
 
     # Miraculix computation
-    handle = mx.init_compressed(plink, None, n_snps, n_indiv, freq, max_ncol=ncol, use_gpu=False)
+    handle = mx.init_compressed(plink, plink_transposed, n_snps, n_indiv, freq, max_ncol=ncol, use_gpu=use_gpu)
 
     C = mx.dgemm_compressed(handle, B, snps=n_snps, indiv=n_indiv, transpose=True)
 
@@ -99,10 +108,15 @@ def gemm_transposed(seed: int, plink: np.ndarray, freq: np.ndarray, n_snps: int,
 def main() -> None:
     args = parse_args()
 
+    use_gpu=False
+    if args.gpu:
+        print(f"Test with NVIDIA GPU")
+        use_gpu=True
+
     # Load Miraculix
     mx.set_library_path(args.library)
     mx.load_shared_library()
-    mx.set_options(use_gpu=False, verbose=0)
+    mx.set_options(use_gpu=use_gpu, verbose=0)
 
     # Read Plink file
     plink, freq, n_snps, n_indiv = mx.read_bed(args.bed, calc_freq=True)
@@ -111,10 +125,10 @@ def main() -> None:
 
 
     # test gemm
-    gemm(args.seed, plink, freq, n_snps, n_indiv, args.ncol)
+    gemm(args.seed, use_gpu, plink, freq, n_snps, n_indiv, args.ncol)
 
     # test gemm + transposed
-    gemm_transposed(args.seed, plink, freq, n_snps, n_indiv, args.ncol)
+    gemm_transposed(args.seed, use_gpu, plink, freq, n_snps, n_indiv, args.ncol)
 
 
 if __name__ == "__main__":
