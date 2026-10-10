@@ -47,7 +47,7 @@ def gemm(seed: int, plink: np.ndarray, freq: np.ndarray, n_snps: int, n_indiv: i
     B = np.asfortranarray(rng.standard_normal((n_snps, ncol), dtype=np.float64))
 
     # Miraculix computation
-    handle = mx.init_compressed(plink, None, n_snps, n_indiv, freq, max_ncol=ncol, lgpu=False)
+    handle = mx.init_compressed(plink, None, n_snps, n_indiv, freq, max_ncol=ncol, use_gpu=False)
 
     C = mx.dgemm_compressed(handle, B, snps=n_snps, indiv=n_indiv, transpose=False)
 
@@ -75,7 +75,7 @@ def gemm_transposed(seed: int, plink: np.ndarray, freq: np.ndarray, n_snps: int,
     B = np.asfortranarray(rng.standard_normal((n_indiv, ncol), dtype=np.float64))
 
     # Miraculix computation
-    handle = mx.init_compressed(plink, None, n_snps, n_indiv, freq, max_ncol=ncol, lgpu=False)
+    handle = mx.init_compressed(plink, None, n_snps, n_indiv, freq, max_ncol=ncol, use_gpu=False)
 
     C = mx.dgemm_compressed(handle, B, snps=n_snps, indiv=n_indiv, transpose=True)
 

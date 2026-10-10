@@ -76,7 +76,7 @@ def init_compressed(
     indiv: int,
     freq: np.ndarray,
     max_ncol: int,
-    lgpu: bool
+    use_gpu: bool
 ) -> CompressedGenotypeHandle:
     lib = require_library()
 
@@ -96,7 +96,7 @@ def init_compressed(
     # Transposed Plink bed matrix (for GPU)
     plink_transposed_ptr = ctypes.POINTER(ctypes.c_uint8)()   # NULL pointer of the correct type
 
-    if lgpu:
+    if use_gpu:
         plink_transposed = require_numpy_matrix(
             plink_transposed, dtype=np.uint8, name="plink_transposed", order="F"
         )

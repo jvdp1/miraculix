@@ -50,7 +50,7 @@ def main() -> None:
     rng = np.random.default_rng(args.seed)
     B = np.asfortranarray(rng.standard_normal((n_snps, args.ncol), dtype=np.float64))
 
-    with mx.init_compressed(plink, None, n_snps, n_indiv, freq, max_ncol=args.ncol, lgpu=False) as handle:
+    with mx.init_compressed(plink, None, n_snps, n_indiv, freq, max_ncol=args.ncol, use_gpu=False) as handle:
         C = mx.dgemm_compressed(handle, B, snps=n_snps, indiv=n_indiv, transpose=False)
 
     print(f"Read {n_snps} SNPs x {n_indiv} individuals from {args.bed}")
