@@ -8,6 +8,7 @@ from ._lib import (
 )
 from .dgemm_compressed import CompressedGenotypeHandle, dgemm_compressed, init_compressed, set_options
 from .read_plink import read_bed, transpose_plink
+from .op_plink import decompress_bed
 from .solve import SparseSolveHandle, dense_solve, sparse_init, sparse_solve
 
 __all__ = [
@@ -15,6 +16,7 @@ __all__ = [
     "MiraculixError",
     "SparseSolveHandle",
     "close_shared_library",
+    "decompress_bed",
     "dense_solve",
     "dgemm_compressed",
     "get_library_path",

@@ -96,6 +96,7 @@ def test_compressed_gemm_cpu_roundtrip(loaded_library):
     indiv, snps = genotype.shape
     freq = genotype.mean(axis=0, dtype=np.float64) / 2.0
     plink = _pack_plink_style(genotype)
+
     plink_t = _transpose_packed(plink, snps=snps, indiv=indiv)
     B = np.asfortranarray(np.array([[1.0, -1.0], [0.5, 2.0], [3.0, 0.25]], dtype=np.float64))
 
@@ -137,3 +138,26 @@ def test_read_bed_and_transpose_roundtrip(tmp_path):
     np.testing.assert_array_equal(plink, packed)
     np.testing.assert_allclose(freq, genotype.mean(axis=0, dtype=np.float64) / 2.0)
     np.testing.assert_array_equal(plink_t, _transpose_packed(packed, snps=n_snps, indiv=n_indiv))
+
+
+def test_decompressed(loaded_library):
+    mx.set_options(use_gpu=False, verbose=0)
+
+    genotype = np.array(
+        [
+            [0, 1, 2],
+            [2, 1, 0],
+            [1, 0, 1],
+            [0, 2, 1],
+            [2, 2, 0],
+        ],
+        dtype=np.uint8,
+    )
+
+    indiv, snps = genotype.shape
+
+    plink = _pack_plink_style(genotype)
+
+    geno_decomp = mx.decompress_bed(plink, indiv, snps)
+
+    np.testing.assert_array_equal(genotype, geno_decomp)

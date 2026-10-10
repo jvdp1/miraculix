@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import numpy as np
+#from numba import njit, prange
 
 
 _BED_HEADER = bytes((0x6C, 0x1B, 0x01))
@@ -51,6 +52,7 @@ def read_bed(path: str | Path, *, calc_freq: bool = True) -> tuple[np.ndarray, n
     return plink, freq, n_snps, n_indiv
 
 
+#@njit(parallel=True, fastmath=True)
 def transpose_plink(plink: np.ndarray, *, snps: int, indiv: int) -> np.ndarray:
     expected_shape = ((indiv + 3) // 4, snps)
     if plink.shape != expected_shape:
@@ -59,9 +61,9 @@ def transpose_plink(plink: np.ndarray, *, snps: int, indiv: int) -> np.ndarray:
     plink_transposed = np.zeros(((snps + 3) // 4, indiv), dtype=np.uint8, order="F")
     for snp_group in range(0, snps, 4):
         for indiv_group in range(0, indiv, 4):
+            indiv_index = indiv_group // 4
             upper_limit = min(3, snps - snp_group - 1)
             for j in range(upper_limit + 1):
-                indiv_index = indiv_group // 4
                 entry = int(plink[indiv_index, snp_group + j])
                 for i in range(4):
                     new_col = indiv_group + i
@@ -70,3 +72,4 @@ def transpose_plink(plink: np.ndarray, *, snps: int, indiv: int) -> np.ndarray:
                     new_row = (snp_group + j) // 4
                     plink_transposed[new_row, new_col] |= np.uint8(((entry >> (2 * i)) & 0x03) << (2 * j))
     return plink_transposed
+
