@@ -41,11 +41,13 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 def header(C: np.ndarray) -> None:
-    print(f"Computed C = G * B with shape {C.shape}")
+    print(f"\nComputed C = G * B with shape {C.shape}")
     print("First rows of C:")
     print(C[: min(5, C.shape[0]), : min(5, C.shape[1])])
 
 def gemm(seed: int, use_gpu: bool, plink: np.ndarray, freq: np.ndarray, n_snps: int, n_indiv: int, ncol: int) -> None:
+    print("\nGEMM")
+
     plink_transposed = None
     if use_gpu:
         plink_transposed = mx.transpose_plink(plink, snps=n_snps, indiv=n_indiv)
@@ -82,6 +84,8 @@ def gemm(seed: int, use_gpu: bool, plink: np.ndarray, freq: np.ndarray, n_snps: 
     assert np.allclose(C, C_np, rtol=1e-7, atol=1e-9)
 
 def gemm_transposed(seed: int, use_gpu: bool, plink: np.ndarray, freq: np.ndarray, n_snps: int, n_indiv: int, ncol: int) -> None:
+    print("\nGEMM_TRANSPOSED")
+
     plink_transposed = None
     if use_gpu:
         plink_transposed = mx.transpose_plink(plink, snps=n_snps, indiv=n_indiv)
@@ -117,7 +121,9 @@ def gemm_transposed(seed: int, use_gpu: bool, plink: np.ndarray, freq: np.ndarra
     # assert that C and C_np are equal
     assert np.allclose(C, C_np, rtol=1e-7, atol=1e-9)
 
-def loop_gemm(seed: int, use_gpu: bool, plink: np.ndarray, freq: np.ndarray, n_snps: int, n_indiv: int, ncol: int) -> None:
+def loop_gemm(seed: int, use_gpu: bool, plink: np.ndarray, freq: np.ndarray, n_snps: int, n_indiv: int, ncol: int, niter: int=10) -> None:
+    print("\nLOOP_GEMM")
+
     plink_transposed = None
     if use_gpu:
         plink_transposed = mx.transpose_plink(plink, snps=n_snps, indiv=n_indiv)
@@ -126,40 +132,74 @@ def loop_gemm(seed: int, use_gpu: bool, plink: np.ndarray, freq: np.ndarray, n_s
 
     handle = mx.init_compressed(plink, plink_transposed, n_snps, n_indiv, freq, max_ncol=ncol, use_gpu=use_gpu)
 
-    for iter in range(10):
+    # Numpy computation
+    geno = mx.decompress_bed(plink, n_indiv, n_snps)
+    geno = geno - 2 * freq
+
+    #Warm-up
+    # Random matrix
+    B = np.asfortranarray(rng.standard_normal((n_snps, ncol), dtype=np.float64))
+
+    # Miraculix computation
+    C = mx.dgemm_compressed(handle, B, snps=n_snps, indiv=n_indiv, transpose=False)
+
+    times_n = 0
+    times_np_n = 0
+    times_t = 0
+    times_np_t = 0
+
+    for iter in range(niter):
         # Random matrix
         B = np.asfortranarray(rng.standard_normal((n_snps, ncol), dtype=np.float64))
 
         # Miraculix computation
+        start = time.perf_counter()
         C = mx.dgemm_compressed(handle, B, snps=n_snps, indiv=n_indiv, transpose=False)
-        header(C)
+        end = time.perf_counter()
+
+        times_n += end - start
+
+        # Numpy computation
+        start = time.perf_counter()
+        C_np = geno @ B
+        end = time.perf_counter()
+
+        times_np_n += end - start
+
+        assert np.allclose(C, C_np, rtol=1e-7, atol=1e-9)
 
         # Random matrix
         Bt = np.asfortranarray(rng.standard_normal((n_indiv, ncol), dtype=np.float64))
 
         # Miraculix computation
+        start = time.perf_counter()
         Ct = mx.dgemm_compressed(handle, Bt, snps=n_snps, indiv=n_indiv, transpose=True)
-        header(Ct)
+        end = time.perf_counter()
+
+        times_t += end - start
+
+        # Numpy computation
+        start = time.perf_counter()
+        C_np_t = geno.T @ Bt
+        end = time.perf_counter()
+
+        times_np_t += end - start
+
+        assert np.allclose(Ct, C_np_t, rtol=1e-7, atol=1e-9)
 
     handle.close()
 
+    print(f"Miraculix - N - average wall clock time: {times_n/niter}")
+    print(f"Miraculix - T - average wall clock time: {times_t/niter}")
 
-#    # Numpy computation
-#    geno = mx.decompress_bed(plink, n_indiv, n_snps)
-#    geno = geno - 2 * freq
-
-#    C_np = geno @ B
-
-#    header(C_np)
-
-#    # assert that C and C_np are equal
-#    assert np.allclose(C, C_np, rtol=1e-7, atol=1e-9)
-
-
+    print(f"Numpy - N - average wall clock time: {times_np_n/niter}")
+    print(f"Numpy - T - average wall clock time: {times_np_t/niter}")
 
 
 def main() -> None:
     args = parse_args()
+
+    np.__config__.show()
 
     use_gpu=False
     if args.gpu:
