@@ -4,7 +4,6 @@ from pathlib import Path
 
 import numpy as np
 
-
 ROOT_DIR = Path(__file__).resolve().parents[2]
 PYTHON_BINDING_DIR = ROOT_DIR / "src" / "bindings" / "Python"
 sys.path.insert(0, str(PYTHON_BINDING_DIR))

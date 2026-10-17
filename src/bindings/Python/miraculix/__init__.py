@@ -6,9 +6,14 @@ from ._lib import (
     load_shared_library,
     set_library_path,
 )
-from .dgemm_compressed import CompressedGenotypeHandle, dgemm_compressed, init_compressed, set_options
-from .read_plink import read_bed, transpose_plink
+from .dgemm_compressed import (
+    CompressedGenotypeHandle,
+    dgemm_compressed,
+    init_compressed,
+    set_options,
+)
 from .op_plink import decompress_bed
+from .read_plink import read_bed, transpose_plink
 from .solve import SparseSolveHandle, dense_solve, sparse_init, sparse_solve
 
 __all__ = [

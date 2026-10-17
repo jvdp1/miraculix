@@ -1,5 +1,5 @@
-from pathlib import Path
 import sys
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -7,7 +7,6 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import miraculix as mx
-
 
 ROOT = Path(__file__).resolve().parents[4]
 LIBRARY_PATH = ROOT / "src" / "miraculix" / "miraculix.so"
@@ -100,7 +99,7 @@ def test_compressed_gemm_cpu_roundtrip(loaded_library):
     plink_t = _transpose_packed(plink, snps=snps, indiv=indiv)
     B = np.asfortranarray(np.array([[1.0, -1.0], [0.5, 2.0], [3.0, 0.25]], dtype=np.float64))
 
-    handle = mx.init_compressed(plink, plink_t, snps, indiv, freq, max_ncol=B.shape[1])
+    handle = mx.init_compressed(plink, plink_t, snps, indiv, freq, max_ncol=B.shape[1], use_gpu=False)
     C = mx.dgemm_compressed(handle, B, snps=snps, indiv=indiv, transpose=False)
 
     expected = (genotype.astype(np.float64) - 2.0 * freq) @ B
@@ -116,7 +115,7 @@ def test_init_compressed_validates_shapes(loaded_library):
     plink_t = np.zeros((1, 4), dtype=np.uint8, order="F")
     freq = np.zeros(3, dtype=np.float64)
     with pytest.raises(ValueError):
-        mx.init_compressed(plink, plink_t, 3, 5, freq, 2)
+        mx.init_compressed(plink, plink_t, 3, 5, freq, 2, use_gpu=False)
 
 
 def test_read_bed_and_transpose_roundtrip(tmp_path):

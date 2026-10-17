@@ -1,8 +1,7 @@
 from pathlib import Path
 
 import numpy as np
-#from numba import njit, prange
-
+from numba import njit
 
 _BED_HEADER = bytes((0x6C, 0x1B, 0x01))
 
@@ -52,13 +51,8 @@ def read_bed(path: str | Path, *, calc_freq: bool = True) -> tuple[np.ndarray, n
     return plink, freq, n_snps, n_indiv
 
 
-#@njit(parallel=True, fastmath=True)
-def transpose_plink(plink: np.ndarray, *, snps: int, indiv: int) -> np.ndarray:
-    expected_shape = ((indiv + 3) // 4, snps)
-    if plink.shape != expected_shape:
-        raise ValueError(f"plink must have shape {expected_shape}, got {plink.shape}")
-
-    plink_transposed = np.zeros(((snps + 3) // 4, indiv), dtype=np.uint8, order="F")
+@njit
+def _transpose_plink_core(plink: np.ndarray, snps: int, indiv: int, plink_transposed: np.ndarray):
     for snp_group in range(0, snps, 4):
         for indiv_group in range(0, indiv, 4):
             indiv_index = indiv_group // 4
@@ -71,5 +65,16 @@ def transpose_plink(plink: np.ndarray, *, snps: int, indiv: int) -> np.ndarray:
                         continue
                     new_row = (snp_group + j) // 4
                     plink_transposed[new_row, new_col] |= np.uint8(((entry >> (2 * i)) & 0x03) << (2 * j))
+
+
+def transpose_plink(plink: np.ndarray, *, snps: int, indiv: int) -> np.ndarray:
+    expected_shape = ((indiv + 3) // 4, snps)
+    if plink.shape != expected_shape:
+        raise ValueError(f"plink must have shape {expected_shape}, got {plink.shape}")
+
+    plink_transposed = np.zeros(((snps + 3) // 4, indiv), dtype=np.uint8, order="F")
+
+    _transpose_plink_core(plink, snps, indiv, plink_transposed)
+
     return plink_transposed
 

@@ -1,7 +1,7 @@
 import argparse
 import sys
-from pathlib import Path
 import time
+from pathlib import Path
 
 import numpy as np
 
@@ -10,6 +10,7 @@ PYTHON_BINDING_DIR = ROOT_DIR / "src" / "bindings" / "Python"
 sys.path.insert(0, str(PYTHON_BINDING_DIR))
 
 import miraculix as mx
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -203,7 +204,7 @@ def main() -> None:
 
     use_gpu=False
     if args.gpu:
-        print(f"Test with NVIDIA GPU")
+        print("Test with NVIDIA GPU")
         use_gpu=True
 
     # Load Miraculix
