@@ -20,7 +20,9 @@ def _pack_plink_style(genotypes: np.ndarray) -> np.ndarray:
         for indiv_index in range(indiv):
             byte_index = indiv_index // 4
             offset = (indiv_index % 4) * 2
-            packed[byte_index, snp] |= np.uint8(encode[int(genotypes[indiv_index, snp])] << offset)
+            packed[byte_index, snp] |= np.uint8(
+                encode[int(genotypes[indiv_index, snp])] << offset
+            )
     return packed
 
 
@@ -38,11 +40,15 @@ def _transpose_packed(plink: np.ndarray, *, snps: int, indiv: int) -> np.ndarray
                         continue
                     new_row = (snp_group + j) // 4
                     offset = j
-                    plink_transposed[new_row, new_col] |= np.uint8(((entry >> (2 * i)) & 0x03) << (2 * offset))
+                    plink_transposed[new_row, new_col] |= np.uint8(
+                        ((entry >> (2 * i)) & 0x03) << (2 * offset)
+                    )
     return plink_transposed
 
 
-def _write_plink_triplet(base_path: Path, genotype: np.ndarray) -> tuple[Path, np.ndarray]:
+def _write_plink_triplet(
+    base_path: Path, genotype: np.ndarray
+) -> tuple[Path, np.ndarray]:
     bed_path = base_path.with_suffix(".bed")
     bim_path = base_path.with_suffix(".bim")
     fam_path = base_path.with_suffix(".fam")
@@ -55,10 +61,10 @@ def _write_plink_triplet(base_path: Path, genotype: np.ndarray) -> tuple[Path, n
     n_indiv, n_snps = genotype.shape
     with bim_path.open("w", encoding="utf-8") as handle:
         for snp in range(n_snps):
-            handle.write(f"1 rs{snp+1} 0 {snp+1} A G\n")
+            handle.write(f"1 rs{snp + 1} 0 {snp + 1} A G\n")
     with fam_path.open("w", encoding="utf-8") as handle:
         for indiv in range(n_indiv):
-            handle.write(f"F{indiv+1} I{indiv+1} 0 0 0 -9\n")
+            handle.write(f"F{indiv + 1} I{indiv + 1} 0 0 0 -9\n")
 
     return bed_path, plink
 
@@ -97,9 +103,13 @@ def test_compressed_gemm_cpu_roundtrip(loaded_library):
     plink = _pack_plink_style(genotype)
 
     plink_t = _transpose_packed(plink, snps=snps, indiv=indiv)
-    B = np.asfortranarray(np.array([[1.0, -1.0], [0.5, 2.0], [3.0, 0.25]], dtype=np.float64))
+    B = np.asfortranarray(
+        np.array([[1.0, -1.0], [0.5, 2.0], [3.0, 0.25]], dtype=np.float64)
+    )
 
-    handle = mx.init_compressed(plink, plink_t, snps, indiv, freq, max_ncol=B.shape[1], use_gpu=False)
+    handle = mx.init_compressed(
+        plink, plink_t, snps, indiv, freq, max_ncol=B.shape[1], use_gpu=False
+    )
     C = mx.dgemm_compressed(handle, B, snps=snps, indiv=indiv, transpose=False)
 
     expected = (genotype.astype(np.float64) - 2.0 * freq) @ B
@@ -136,7 +146,9 @@ def test_read_bed_and_transpose_roundtrip(tmp_path):
 
     np.testing.assert_array_equal(plink, packed)
     np.testing.assert_allclose(freq, genotype.mean(axis=0, dtype=np.float64) / 2.0)
-    np.testing.assert_array_equal(plink_t, _transpose_packed(packed, snps=n_snps, indiv=n_indiv))
+    np.testing.assert_array_equal(
+        plink_t, _transpose_packed(packed, snps=n_snps, indiv=n_indiv)
+    )
 
 
 def test_decompressed(loaded_library):

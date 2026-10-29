@@ -21,7 +21,9 @@ def set_library_path(path: str | Path) -> None:
 
     resolved = Path(path).expanduser().resolve()
     if not resolved.is_file():
-        raise FileNotFoundError(f"The specified library path does not exist: {resolved}")
+        raise FileNotFoundError(
+            f"The specified library path does not exist: {resolved}"
+        )
     _LIBRARY_PATH = resolved
 
 
@@ -57,7 +59,9 @@ def is_library_loaded() -> bool:
 
 def require_library() -> ctypes.CDLL:
     if _LIBRARY_HANDLE is None:
-        raise MiraculixError("Shared library not loaded. Call load_shared_library() first.")
+        raise MiraculixError(
+            "Shared library not loaded. Call load_shared_library() first."
+        )
     return _LIBRARY_HANDLE
 
 
@@ -168,7 +172,9 @@ def require_symbol(name: str):
     return symbol
 
 
-def require_numpy_matrix(array: np.ndarray, *, dtype, name: str, order: str = "F") -> np.ndarray:
+def require_numpy_matrix(
+    array: np.ndarray, *, dtype, name: str, order: str = "F"
+) -> np.ndarray:
     if not isinstance(array, np.ndarray):
         raise TypeError(f"{name} must be a numpy.ndarray")
     if array.ndim != 2:

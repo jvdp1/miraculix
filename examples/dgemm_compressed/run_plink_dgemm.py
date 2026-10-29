@@ -44,12 +44,14 @@ def main() -> None:
     mx.set_options(use_gpu=False, verbose=0)
 
     plink, freq, n_snps, n_indiv = mx.read_bed(args.bed, calc_freq=True)
-    #plink_transposed = mx.transpose_plink(plink, snps=n_snps, indiv=n_indiv)
+    # plink_transposed = mx.transpose_plink(plink, snps=n_snps, indiv=n_indiv)
 
     rng = np.random.default_rng(args.seed)
     B = np.asfortranarray(rng.standard_normal((n_snps, args.ncol), dtype=np.float64))
 
-    with mx.init_compressed(plink, None, n_snps, n_indiv, freq, max_ncol=args.ncol, use_gpu=False) as handle:
+    with mx.init_compressed(
+        plink, None, n_snps, n_indiv, freq, max_ncol=args.ncol, use_gpu=False
+    ) as handle:
         C = mx.dgemm_compressed(handle, B, snps=n_snps, indiv=n_indiv, transpose=False)
 
     print(f"Read {n_snps} SNPs x {n_indiv} individuals from {args.bed}")

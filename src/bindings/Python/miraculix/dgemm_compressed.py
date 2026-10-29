@@ -4,7 +4,6 @@ import numpy as np
 
 from ._lib import (
     MiraculixError,
-    check_status,
     matrix_pointer,
     require_library,
     require_numpy_matrix,
@@ -76,7 +75,7 @@ def init_compressed(
     indiv: int,
     freq: np.ndarray,
     max_ncol: int,
-    use_gpu: bool
+    use_gpu: bool,
 ) -> CompressedGenotypeHandle:
     lib = require_library()
 
@@ -85,7 +84,9 @@ def init_compressed(
 
     expected_plink_shape = ((indiv + 3) // 4, snps)
     if plink.shape != expected_plink_shape:
-        raise ValueError(f"plink must have shape {expected_plink_shape}, got {plink.shape}")
+        raise ValueError(
+            f"plink must have shape {expected_plink_shape}, got {plink.shape}"
+        )
 
     # Allele frequency
     freq = require_numpy_vector(freq, dtype=np.float64, name="freq")
@@ -94,7 +95,9 @@ def init_compressed(
         raise ValueError(f"freq must have length {snps}, got {freq.shape[0]}")
 
     # Transposed Plink bed matrix (for GPU)
-    plink_transposed_ptr = ctypes.POINTER(ctypes.c_uint8)()   # NULL pointer of the correct type
+    plink_transposed_ptr = ctypes.POINTER(
+        ctypes.c_uint8
+    )()  # NULL pointer of the correct type
 
     if use_gpu:
         plink_transposed = require_numpy_matrix(
@@ -112,7 +115,7 @@ def init_compressed(
     ptr = ctypes.c_void_p()
     lib.plink2compressed(
         matrix_pointer(plink, ctypes.c_uint8),
-        plink_transposed_ptr, 
+        plink_transposed_ptr,
         int(snps),
         int(indiv),
         matrix_pointer(freq, ctypes.c_double),

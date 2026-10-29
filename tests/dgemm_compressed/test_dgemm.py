@@ -41,12 +41,22 @@ def parse_args() -> argparse.Namespace:
     )
     return parser.parse_args()
 
+
 def header(C: np.ndarray) -> None:
     print(f"\nComputed C = G * B with shape {C.shape}")
     print("First rows of C:")
     print(C[: min(5, C.shape[0]), : min(5, C.shape[1])])
 
-def gemm(seed: int, use_gpu: bool, plink: np.ndarray, freq: np.ndarray, n_snps: int, n_indiv: int, ncol: int) -> None:
+
+def gemm(
+    seed: int,
+    use_gpu: bool,
+    plink: np.ndarray,
+    freq: np.ndarray,
+    n_snps: int,
+    n_indiv: int,
+    ncol: int,
+) -> None:
     print("\nGEMM")
 
     plink_transposed = None
@@ -58,12 +68,14 @@ def gemm(seed: int, use_gpu: bool, plink: np.ndarray, freq: np.ndarray, n_snps: 
     B = np.asfortranarray(rng.standard_normal((n_snps, ncol), dtype=np.float64))
 
     # Miraculix computation
-    handle = mx.init_compressed(plink, plink_transposed, n_snps, n_indiv, freq, max_ncol=ncol, use_gpu=use_gpu)
+    handle = mx.init_compressed(
+        plink, plink_transposed, n_snps, n_indiv, freq, max_ncol=ncol, use_gpu=use_gpu
+    )
 
     start = time.perf_counter()
     C = mx.dgemm_compressed(handle, B, snps=n_snps, indiv=n_indiv, transpose=False)
     end = time.perf_counter()
-    print(f"Miraculix: Wall clock time (s): {end-start:.6f}")
+    print(f"Miraculix: Wall clock time (s): {end - start:.6f}")
 
     handle.close()
 
@@ -77,14 +89,23 @@ def gemm(seed: int, use_gpu: bool, plink: np.ndarray, freq: np.ndarray, n_snps: 
     start = time.perf_counter()
     C_np = geno @ B
     end = time.perf_counter()
-    print(f"Numpy: Wall clock time (s): {end-start:.6f}")
+    print(f"Numpy: Wall clock time (s): {end - start:.6f}")
 
     header(C_np)
 
     # assert that C and C_np are equal
     assert np.allclose(C, C_np, rtol=1e-7, atol=1e-9)
 
-def gemm_transposed(seed: int, use_gpu: bool, plink: np.ndarray, freq: np.ndarray, n_snps: int, n_indiv: int, ncol: int) -> None:
+
+def gemm_transposed(
+    seed: int,
+    use_gpu: bool,
+    plink: np.ndarray,
+    freq: np.ndarray,
+    n_snps: int,
+    n_indiv: int,
+    ncol: int,
+) -> None:
     print("\nGEMM_TRANSPOSED")
 
     plink_transposed = None
@@ -96,12 +117,14 @@ def gemm_transposed(seed: int, use_gpu: bool, plink: np.ndarray, freq: np.ndarra
     B = np.asfortranarray(rng.standard_normal((n_indiv, ncol), dtype=np.float64))
 
     # Miraculix computation
-    handle = mx.init_compressed(plink, plink_transposed, n_snps, n_indiv, freq, max_ncol=ncol, use_gpu=use_gpu)
+    handle = mx.init_compressed(
+        plink, plink_transposed, n_snps, n_indiv, freq, max_ncol=ncol, use_gpu=use_gpu
+    )
 
     start = time.perf_counter()
     C = mx.dgemm_compressed(handle, B, snps=n_snps, indiv=n_indiv, transpose=True)
     end = time.perf_counter()
-    print(f"Miraculix (t): Wall clock time (s): {end-start:.6f}")
+    print(f"Miraculix (t): Wall clock time (s): {end - start:.6f}")
 
     handle.close()
 
@@ -115,14 +138,24 @@ def gemm_transposed(seed: int, use_gpu: bool, plink: np.ndarray, freq: np.ndarra
     start = time.perf_counter()
     C_np = geno.T @ B
     end = time.perf_counter()
-    print(f"Numpy (t): Wall clock time (s): {end-start:.6f}")
+    print(f"Numpy (t): Wall clock time (s): {end - start:.6f}")
 
     header(C_np)
 
     # assert that C and C_np are equal
     assert np.allclose(C, C_np, rtol=1e-7, atol=1e-9)
 
-def loop_gemm(seed: int, use_gpu: bool, plink: np.ndarray, freq: np.ndarray, n_snps: int, n_indiv: int, ncol: int, niter: int=10) -> None:
+
+def loop_gemm(
+    seed: int,
+    use_gpu: bool,
+    plink: np.ndarray,
+    freq: np.ndarray,
+    n_snps: int,
+    n_indiv: int,
+    ncol: int,
+    niter: int = 10,
+) -> None:
     print("\nLOOP_GEMM")
 
     plink_transposed = None
@@ -131,13 +164,15 @@ def loop_gemm(seed: int, use_gpu: bool, plink: np.ndarray, freq: np.ndarray, n_s
 
     rng = np.random.default_rng(seed)
 
-    handle = mx.init_compressed(plink, plink_transposed, n_snps, n_indiv, freq, max_ncol=ncol, use_gpu=use_gpu)
+    handle = mx.init_compressed(
+        plink, plink_transposed, n_snps, n_indiv, freq, max_ncol=ncol, use_gpu=use_gpu
+    )
 
     # Numpy computation
     geno = mx.decompress_bed(plink, n_indiv, n_snps)
     geno = geno - 2 * freq
 
-    #Warm-up
+    # Warm-up
     # Random matrix
     B = np.asfortranarray(rng.standard_normal((n_snps, ncol), dtype=np.float64))
 
@@ -190,11 +225,11 @@ def loop_gemm(seed: int, use_gpu: bool, plink: np.ndarray, freq: np.ndarray, n_s
 
     handle.close()
 
-    print(f"Miraculix - N - average wall clock time: {times_n/niter}")
-    print(f"Miraculix - T - average wall clock time: {times_t/niter}")
+    print(f"Miraculix - N - average wall clock time: {times_n / niter}")
+    print(f"Miraculix - T - average wall clock time: {times_t / niter}")
 
-    print(f"Numpy - N - average wall clock time: {times_np_n/niter}")
-    print(f"Numpy - T - average wall clock time: {times_np_t/niter}")
+    print(f"Numpy - N - average wall clock time: {times_np_n / niter}")
+    print(f"Numpy - T - average wall clock time: {times_np_t / niter}")
 
 
 def main() -> None:
@@ -202,10 +237,10 @@ def main() -> None:
 
     np.__config__.show()
 
-    use_gpu=False
+    use_gpu = False
     if args.gpu:
         print("Test with NVIDIA GPU")
-        use_gpu=True
+        use_gpu = True
 
     # Load Miraculix
     mx.set_library_path(args.library)
@@ -216,7 +251,6 @@ def main() -> None:
     plink, freq, n_snps, n_indiv = mx.read_bed(args.bed, calc_freq=True)
 
     print(f"Read {n_snps} SNPs x {n_indiv} individuals from {args.bed}")
-
 
     # test gemm
     gemm(args.seed, use_gpu, plink, freq, n_snps, n_indiv, args.ncol)

@@ -21,7 +21,9 @@ def _count_lines(path: Path) -> int:
         return sum(1 for line in handle if line.strip())
 
 
-def read_bed(path: str | Path, *, calc_freq: bool = True) -> tuple[np.ndarray, np.ndarray | None, int, int]:
+def read_bed(
+    path: str | Path, *, calc_freq: bool = True
+) -> tuple[np.ndarray, np.ndarray | None, int, int]:
     bed_path = Path(path).expanduser().resolve()
     bed_path, bim_path, fam_path = _require_plink_triplet(bed_path)
 
@@ -41,7 +43,11 @@ def read_bed(path: str | Path, *, calc_freq: bool = True) -> tuple[np.ndarray, n
             f"Unexpected .bed size for {bed_path}: expected {expected} payload bytes, got {len(raw)}"
         )
 
-    plink = np.frombuffer(raw, dtype=np.uint8).reshape((n_snps, n_bytes_per_col)).T.copy(order="F")
+    plink = (
+        np.frombuffer(raw, dtype=np.uint8)
+        .reshape((n_snps, n_bytes_per_col))
+        .T.copy(order="F")
+    )
 
     freq = None
     if calc_freq:
@@ -52,7 +58,9 @@ def read_bed(path: str | Path, *, calc_freq: bool = True) -> tuple[np.ndarray, n
 
 
 @njit
-def _transpose_plink_core(plink: np.ndarray, snps: int, indiv: int, plink_transposed: np.ndarray):
+def _transpose_plink_core(
+    plink: np.ndarray, snps: int, indiv: int, plink_transposed: np.ndarray
+):
     for snp_group in range(0, snps, 4):
         for indiv_group in range(0, indiv, 4):
             indiv_index = indiv_group // 4
@@ -64,7 +72,9 @@ def _transpose_plink_core(plink: np.ndarray, snps: int, indiv: int, plink_transp
                     if new_col >= indiv:
                         continue
                     new_row = (snp_group + j) // 4
-                    plink_transposed[new_row, new_col] |= np.uint8(((entry >> (2 * i)) & 0x03) << (2 * j))
+                    plink_transposed[new_row, new_col] |= np.uint8(
+                        ((entry >> (2 * i)) & 0x03) << (2 * j)
+                    )
 
 
 def transpose_plink(plink: np.ndarray, *, snps: int, indiv: int) -> np.ndarray:
@@ -77,4 +87,3 @@ def transpose_plink(plink: np.ndarray, *, snps: int, indiv: int) -> np.ndarray:
     _transpose_plink_core(plink, snps, indiv, plink_transposed)
 
     return plink_transposed
-

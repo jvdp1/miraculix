@@ -89,7 +89,9 @@ def sparse_init(
     return SparseSolveHandle(ptr)
 
 
-def sparse_solve(handle: SparseSolveHandle, transA: str, B: np.ndarray, *, m: int) -> np.ndarray:
+def sparse_solve(
+    handle: SparseSolveHandle, transA: str, B: np.ndarray, *, m: int
+) -> np.ndarray:
     lib = require_library()
     require_symbol("dcsrtrsv_solve_gpu")
     if transA not in {"n", "N", "t", "T"}:
