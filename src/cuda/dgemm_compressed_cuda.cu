@@ -179,12 +179,12 @@ int freegpu(void **GPU_obj){
   if(checkCuda() != 0){
     return 1;
   }
-  if(*GPU_obj == NULL){
+  if (GPU_obj == NULL || *GPU_obj == NULL){
     return 1;
-  }  
+  }
   
   // Free device memory and derefence storage object
-  struct GPU_gemm_storage *GPU_storage_obj = (struct GPU_gemm_storage *) (*GPU_obj);
+  struct GPU_gemm_storage *GPU_storage_obj = (struct GPU_gemm_storage *)*GPU_obj;
   err = cudaFree(GPU_storage_obj->d_plink);
   if (checkError(__func__, __LINE__, err) != 0)
     return (1);
@@ -208,7 +208,7 @@ int freegpu(void **GPU_obj){
     return (1);
   free(GPU_storage_obj);
 
-  GPU_obj = NULL;
+  *GPU_obj = NULL;   // clear caller’s pointer
   return 0;
 }
 
