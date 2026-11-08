@@ -51,8 +51,12 @@ def read_bed(
 
     freq = None
     if calc_freq:
-        bit_counts = np.unpackbits(plink, axis=0, bitorder="little").sum(axis=0)
-        freq = bit_counts.astype(np.float64) / (2.0 * n_indiv)
+        codes = (plink[:, :, None] >> (2 * np.arange(4))) & 0x03
+        allele_frequency = np.array([0.0, np.nan, 0.5, 1.0])
+        dosages = allele_frequency[codes].transpose(0, 2, 1).reshape(-1, n_snps)[
+            :n_indiv
+        ]
+        freq = np.nanmean(dosages, axis=0)
 
     return plink, freq, n_snps, n_indiv
 
