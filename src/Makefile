@@ -25,6 +25,15 @@ endif
 .PHONY: all
 all: $(OBJECTS)
 
+.PHONY: shared_lib
+shared_lib: check_cuda libmiraculixGPU
+	cp Makefile_miraculix ./miraculix/Makefile
+	$(MAKE) -C miraculix shared_lib
+
+.PHONY: python
+python: shared_lib
+	$(MAKE) -C bindings/Python tests
+
 %.o: %.cu 
 	$(NVCC) $(CXXFLAGS) -c $< -o $@
 
@@ -41,9 +50,17 @@ libmiraculix:
 standalone: $(CUSTANDALONE)
 	$(NVCC) -Xcompiler -w -DSTANDALONE  $(CXXFLAGS) $(LIBS) $^ -o ./main.o
 
-.PHONY: libdgemm
+.PHONY: libmiraculixGPU
 libmiraculixGPU:
 	cd cuda && make lib
+
+.PHONY: check_cuda
+check_cuda:
+ifndef CUDA_HOME
+$(error Environment variable CUDA_HOME not set - check your CUDA installation.)
+endif
+CUDA_FILES=bin/nvcc lib64/libcudart.so lib64/libcublas.so lib64/libcusolver.so lib64/libcusparse.so
+$(foreach file,$(CUDA_FILES),$(if $(wildcard $(CUDA_HOME)/$(file)),,$(error CUDA file $(CUDA_HOME)/$(file) does not exist)))
 
 .PHONY: libfortran
 libfortran:
@@ -52,4 +69,5 @@ libfortran:
 .PHONY: clean
 clean:
 	$(RM) $(OBJECTS) $(CUOBJECTS) *.a *.out *.o 
-	$(RM) miraculix/*.o miraculix/*.a
+	$(RM) cuda/*.o cuda/*.a
+	$(RM) miraculix/*.o miraculix/*.a miraculix/*.so

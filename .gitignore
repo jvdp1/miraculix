@@ -1,6 +1,7 @@
 .DS_Store
 /build
 /data/*
+!/data/run.sh
 /.vscode/*
 *.so
 *.o
@@ -15,3 +16,4 @@
 
 *.optrpt
 *.tgz
+**__pycache__

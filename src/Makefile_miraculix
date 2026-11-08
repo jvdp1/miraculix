@@ -9,8 +9,13 @@ include makefile.c.mk
 ifeq ($(COMPILER), gcc)
  CC=g++
  CCOMPILER=gcc
- CFLAGS=-I/usr/local/include -O2 $(DEBUGGING_FLAG) -mtune=native -march=native
- CCFLAGS=-I/usr/local/include -O2 -fopenmp -pthread $(DEBUGGING_FLAG) -mtune=native -march=native
+ # No -mtune/-march=native here: per-file SIMD levels are set by the explicit
+ # pattern rules in makefile.c.mk (%256.o/%avx2.o -> AVX2_FLAG, etc.). A blanket
+ # -march=native enables AVX512 in every TU and breaks the scalar AVXTYPE=LongDouble
+ # instantiations in 5codesUint.cc (AVX2 gV5_Loop2B paths vs scalar LongDouble).
+ CFLAGS=-I/usr/local/include -O2 $(DEBUGGING_FLAG) -fPIC
+ CCFLAGS=-I/usr/local/include -O2 -fopenmp -pthread $(DEBUGGING_FLAG) -fPIC
+
  LINK_FLAGS=-llapack -lblas -lgfortran -lm -lquadmath -fopenmp
 
  LINKER=-std=gnu++14 -L/usr/local/lib -L/usr/lib64
@@ -18,8 +23,8 @@ ifeq ($(COMPILER), gcc)
 else ifeq ($(COMPILER), intel)
 
  CC=icc
- CFLAGS=-O2 -diag-disable=10441 $(DEBUGGING_FLAG) 
- CCFLAGS=-O2 -qopenmp -parallel -pthread -diag-disable=10441 $(DEBUGGING_FLAG)
+ CFLAGS=-O2 -diag-disable=10441 -fPIC $(DEBUGGING_FLAG)
+ CCFLAGS=-O2 -qopenmp -parallel -pthread -diag-disable=10441 -fPIC $(DEBUGGING_FLAG)
  LINK_FLAGS=-liomp5 -lmkl_blas95_lp64 -lmkl_lapack95_lp64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core  -lpthread -lm -ldl -lstdc++
 
  LINKER=-std=gnu++14
@@ -28,18 +33,25 @@ endif
 
 
 LIB = libmiraculix.a
-
+SHARED_LIB = miraculix.so
 
 ifeq ($(CUDA), true)
+CUDA_LIB = ../cuda/
+# To expose CUDA functions which aren't use by core miraculix, we need to link the library as a whole archive
+LINK_FLAGS+=-L$(CUDA_LIB) -ldgemm_compressed_cuda
 LINK_FLAGS+=-L${CUDA_HOME}/lib64 -lcudart -lcublas -lcusolver -lcusparse -lcusolver
+
 CCFLAGS+=-DCUDA # Indicates that CUDA functions need to be linked 
 FFLAGS+=-DCUDA
-LINK=g++
+LINK=$(CC)
 endif
 
 
-
+shared_lib: $(SHARED_LIB)
 lib: $(LIB)
+
+$(SHARED_LIB): $(ALL)
+	$(LINK) -shared $^ -o $@ $(LINK_FLAGS) 
 
 $(LIB): $(ALL)
 	ar cr $@ $(ALL)
@@ -52,6 +64,6 @@ vtest: all
 vtestt: all
 	valgrind --tool=memcheck --leak-check=full --num-callers=20 ./$(EXET) data/small.bed data/small.freq
 
-.PHONY: clean lib
+.PHONY: clean lib shared_lib
 clean: 
-	rm *.o
+	rm -f *.o *.a *.so

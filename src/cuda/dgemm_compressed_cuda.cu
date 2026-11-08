@@ -193,9 +193,12 @@ int freegpu(void **GPU_obj){
   if(checkCuda() != 0){
     return 1;
   }
+  if (GPU_obj == NULL || *GPU_obj == NULL){
+    return 1;
+  }
   
   // Free device memory and derefence storage object
-  struct GPU_gemm_storage *GPU_storage_obj = (struct GPU_gemm_storage *) (*GPU_obj);
+  struct GPU_gemm_storage *GPU_storage_obj = (struct GPU_gemm_storage *)*GPU_obj;
   err = cudaFree(GPU_storage_obj->d_plink);
   if (checkError(__func__, __LINE__, err) != 0)
     return (1);
@@ -219,7 +222,7 @@ int freegpu(void **GPU_obj){
     return (1);
   free(GPU_storage_obj);
 
-  GPU_obj = NULL;
+  *GPU_obj = NULL;
   return 0;
 }
 
@@ -312,8 +315,8 @@ int dgemm_compressed_gpu(bool transA, void *GPU_obj, int n, double *B, int ldb,
   err = cudaMemset(d_B, 0, sizeof(double) * size_matrix);
   if (checkError(__func__, __LINE__, err) != 0)
     return 1;
-  err = cudaMemset(d_C, 0, sizeof(double) * err);
-  if (checkError(__func__, __LINE__, cublas_status) != 0)
+  err = cudaMemset(d_C, 0, sizeof(double) * size_matrix);
+  if (checkError(__func__, __LINE__, err) != 0)
     return 1;
   err = cudaMemset(d_D, 0, sizeof(double) * size_matrix);
   if (checkError(__func__, __LINE__, err) != 0)
