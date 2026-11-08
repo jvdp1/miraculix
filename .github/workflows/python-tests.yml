@@ -1,0 +1,59 @@
+name: Python tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cpu-tests:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        toolchain:
+          - {compiler: gcc, version: 10}
+          - {compiler: gcc, version: 11}
+          - {compiler: gcc, version: 12}
+          - {compiler: gcc, version: 13}
+          - {compiler: gcc, version: 14}
+          - {compiler: gcc, version: 15}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+
+      - name: Setup Fortran compiler
+        uses: fortran-lang/setup-fortran@v1.6.2
+        id: setup-fortran
+        with:
+          compiler: ${{ matrix.toolchain.compiler }}
+          version: ${{ matrix.toolchain.version }}
+
+      - name: Version of gcc
+        run: gcc --version
+
+      - name: Install native build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes libblas-dev liblapack-dev make
+
+      - name: Install Python test dependencies
+        run: python -m pip install numpy pytest
+
+      - name: Build CPU shared library
+        run: make -C src/miraculix -f ../Makefile_miraculix COMPILER=gcc CUDA=false shared_lib
+
+      - name: Run Python tests
+        run: |
+          test -f src/miraculix/miraculix.so
+          python -m pytest -q src/bindings/Python/tests
