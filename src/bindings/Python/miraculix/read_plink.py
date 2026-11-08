@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import numpy as np
-from numba import njit
+from numba import njit, prange
 
 _BED_HEADER = bytes((0x6C, 0x1B, 0x01))
 
@@ -51,14 +51,30 @@ def read_bed(
 
     freq = None
     if calc_freq:
-        codes = (plink[:, :, None] >> (2 * np.arange(4))) & 0x03
-        allele_frequency = np.array([0.0, np.nan, 0.5, 1.0])
-        dosages = allele_frequency[codes].transpose(0, 2, 1).reshape(-1, n_snps)[
-            :n_indiv
-        ]
-        freq = np.nanmean(dosages, axis=0)
+        freq = compute_freq(plink, n_indiv, n_snps)
 
     return plink, freq, n_snps, n_indiv
+
+
+@njit
+def compute_freq(plink: np.ndarray, n_indiv: int, n_snps: int) -> np.ndarray:
+    """
+    Computes allele frequencies from a Plink Bed matrix
+    """
+    allele_frequency = np.array([0.0, np.nan, 0.5, 1.0])
+
+    #    codes = (plink[:, :, None] >> (2 * np.arange(4))) & 0x03
+    #    dosages = allele_frequency[codes].transpose(0, 2, 1).reshape(-1, n_snps)[:n_indiv]
+    #    freq = np.nanmean(dosages, axis=0)
+
+    freq = np.empty(n_snps, dtype=np.float64)
+
+    for i in prange(n_snps):
+        codes = (plink[:, i, None] >> (2 * np.arange(4))) & 0x03
+        dosages = allele_frequency[codes].reshape(-1)[:n_indiv]
+        freq[i] = np.nanmean(dosages)
+
+    return freq
 
 
 @njit

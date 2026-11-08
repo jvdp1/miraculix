@@ -13,7 +13,7 @@ from .dgemm_compressed import (
     set_options,
 )
 from .op_plink import decompress_bed
-from .read_plink import read_bed, transpose_plink
+from .read_plink import read_bed, transpose_plink, compute_freq
 from .solve import SparseSolveHandle, dense_solve, sparse_init, sparse_solve
 
 __all__ = [
@@ -21,6 +21,7 @@ __all__ = [
     "MiraculixError",
     "SparseSolveHandle",
     "close_shared_library",
+    "compute_freq",
     "decompress_bed",
     "dense_solve",
     "dgemm_compressed",

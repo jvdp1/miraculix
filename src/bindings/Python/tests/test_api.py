@@ -15,7 +15,7 @@ LIBRARY_PATH = ROOT / "src" / "miraculix" / "miraculix.so"
 def _pack_plink_style(genotypes: np.ndarray) -> np.ndarray:
     indiv, snps = genotypes.shape
     packed = np.zeros(((indiv + 3) // 4, snps), dtype=np.uint8, order="F")
-    encode = {0: 0b00, 1: 0b10, 2: 0b11}
+    encode = {0: 0b00, 1: 0b10, 2: 0b11, 3: 0b01}
     for snp in range(snps):
         for indiv_index in range(indiv):
             byte_index = indiv_index // 4
@@ -102,6 +102,8 @@ def test_compressed_gemm_cpu_roundtrip(loaded_library):
     freq = genotype.mean(axis=0, dtype=np.float64) / 2.0
     plink = _pack_plink_style(genotype)
 
+    np.testing.assert_allclose(freq, mx.compute_freq(plink, indiv, snps))
+
     plink_t = _transpose_packed(plink, snps=snps, indiv=indiv)
     B = np.asfortranarray(
         np.array([[1.0, -1.0], [0.5, 2.0], [3.0, 0.25]], dtype=np.float64)
@@ -117,6 +119,41 @@ def test_compressed_gemm_cpu_roundtrip(loaded_library):
 
     handle.close()
     assert handle.closed
+
+
+def test_compressed_gemm_cpu_with_missing_values(loaded_library):
+    mx.set_options(use_gpu=False, verbose=0)
+
+    genotype = np.array(
+        [
+            [0, 1, 2],
+            [2, 1, 0],
+            [1, 3, 1],
+            [0, 2, 1],
+            [2, 2, 3],
+        ],
+        dtype=np.uint8,
+    )
+    indiv, snps = genotype.shape
+    observed = np.where(genotype == 3, np.nan, genotype)
+    freq = np.nanmean(observed, axis=0, dtype=np.float64) / 2.0
+    plink = _pack_plink_style(genotype)
+
+    np.testing.assert_allclose(freq, mx.compute_freq(plink, indiv, snps))
+
+    plink_t = _transpose_packed(plink, snps=snps, indiv=indiv)
+    B = np.asfortranarray(
+        np.array([[1.0, -1.0], [0.5, 2.0], [3.0, 0.25]], dtype=np.float64)
+    )
+
+    handle = mx.init_compressed(
+        plink, plink_t, snps, indiv, freq, max_ncol=B.shape[1], use_gpu=False
+    )
+    C = mx.dgemm_compressed(handle, B, snps=snps, indiv=indiv, transpose=False)
+
+    centered = np.nan_to_num(observed, nan=0.0) - 2.0 * freq
+    np.testing.assert_allclose(C, centered @ B, atol=1e-8)
+    handle.close()
 
 
 def test_init_compressed_validates_shapes(loaded_library):
@@ -151,6 +188,30 @@ def test_read_bed_and_transpose_roundtrip(tmp_path):
     )
 
 
+def test_read_bed_with_missing_values(tmp_path):
+    genotype = np.array(
+        [
+            [0, 1, 2],
+            [2, 3, 0],
+            [1, 0, 1],
+            [3, 2, 1],
+            [2, 2, 3],
+        ],
+        dtype=np.uint8,
+    )
+    bed_path, packed = _write_plink_triplet(tmp_path / "toy_missing", genotype)
+
+    plink, freq, n_snps, n_indiv = mx.read_bed(bed_path, calc_freq=True)
+    plink_t = mx.transpose_plink(plink, snps=n_snps, indiv=n_indiv)
+    observed = np.where(genotype == 3, np.nan, genotype)
+
+    np.testing.assert_array_equal(plink, packed)
+    np.testing.assert_allclose(freq, np.nanmean(observed, axis=0) / 2.0)
+    np.testing.assert_array_equal(
+        plink_t, _transpose_packed(packed, snps=n_snps, indiv=n_indiv)
+    )
+
+
 def test_decompressed(loaded_library):
     mx.set_options(use_gpu=False, verbose=0)
 
@@ -172,3 +233,23 @@ def test_decompressed(loaded_library):
     geno_decomp = mx.decompress_bed(plink, indiv, snps)
 
     np.testing.assert_array_equal(genotype, geno_decomp)
+
+
+def test_decompressed_with_missing_values(loaded_library):
+    mx.set_options(use_gpu=False, verbose=0)
+    genotype = np.array(
+        [
+            [0, 1, 2],
+            [2, 3, 0],
+            [1, 0, 1],
+            [3, 2, 1],
+            [2, 2, 3],
+        ],
+        dtype=np.uint8,
+    )
+
+    plink = _pack_plink_style(genotype)
+    geno_decomp = mx.decompress_bed(plink, *genotype.shape)
+    expected = np.where(genotype == 3, np.nan, genotype)
+
+    np.testing.assert_allclose(geno_decomp, expected, equal_nan=True)

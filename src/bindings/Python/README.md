@@ -29,6 +29,10 @@ The wrappers expect:
 - dense matrices and frequencies as `numpy.float64`
 - sparse COO indices as `numpy.int64`
 
+PLINK BED file reading, genotype decoding, and transpose can be used without a
+GPU. The compressed GEMM API supports both CPU and NVIDIA GPU execution. GPU
+GEMM requires a CUDA-enabled library build and an NVIDIA GPU.
+
 ### Development
 
 To import from source, add `src/bindings/Python` to `PYTHONPATH`.
