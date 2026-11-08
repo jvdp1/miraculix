@@ -1,12 +1,7 @@
 from pathlib import Path
 
 import numpy as np
-
-try:
-    from numba import njit
-except ImportError:
-    def njit(function):
-        return function
+from numba import njit
 
 _BED_HEADER = bytes((0x6C, 0x1B, 0x01))
 
