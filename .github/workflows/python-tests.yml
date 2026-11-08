@@ -1,4 +1,4 @@
-name: Python tests
+name: CI
 
 on:
   push:
@@ -8,9 +8,14 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   cpu-tests:
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -38,8 +43,11 @@ jobs:
           compiler: ${{ matrix.toolchain.compiler }}
           version: ${{ matrix.toolchain.version }}
 
-      - name: Version of gcc
-        run: gcc --version
+      - name: Show compiler versions
+        run: |
+          gcc --version
+          g++ --version
+          gfortran --version
 
       - name: Install native build dependencies
         run: |
@@ -47,12 +55,17 @@ jobs:
           sudo apt-get install --yes libblas-dev liblapack-dev make
 
       - name: Install Python test dependencies
-        run: python -m pip install numpy pytest
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install numpy numba pytest
 
       - name: Build CPU shared library
-        run: make -C src/miraculix -f ../Makefile_miraculix COMPILER=gcc CUDA=false shared_lib
+        run: make -C src/miraculix -f ../Makefile_miraculix COMPILER=gcc CUDA=false LINK=g++ shared_lib
 
       - name: Run Python tests
+        env:
+          OPENBLAS_NUM_THREADS: 1
+          OMP_NUM_THREADS: 2
         run: |
           test -f src/miraculix/miraculix.so
           python -m pytest -q src/bindings/Python/tests
