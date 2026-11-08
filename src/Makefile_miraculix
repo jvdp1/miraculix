@@ -31,6 +31,7 @@ else ifeq ($(COMPILER), intel)
 
 endif
 
+LINK=$(CC)
 
 LIB = libmiraculix.a
 SHARED_LIB = miraculix.so
